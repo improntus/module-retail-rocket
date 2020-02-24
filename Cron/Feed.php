@@ -717,6 +717,11 @@ class Feed
                 }
             }
 
+            if(strlen($product['description']) >= 200)
+            {
+                $product['description'] = substr($product['description'],0,200);
+            }
+
             $products .= "<description><![CDATA[{$product['description']}]]></description>";
 
             if($product['model'])
