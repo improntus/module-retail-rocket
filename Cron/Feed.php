@@ -381,7 +381,7 @@ class Feed
                     'price' => (float)$finalPrice,
                     'picture' => $productImage,
                     'name' => $this->replaceXmlEntities($product->getName()),
-                    'description' => $this->replaceXmlEntities($product->getData($this->_descriptionAttribute)),
+                    'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
                     'categories' => $product->getCategoryIds(),
                     'group_id' => null,
@@ -443,7 +443,7 @@ class Feed
                         'price' => (float)$simpleProduct->getFinalPrice(),
                         'picture' => $this->getProductImageUrl($simpleProduct->getImage(),$mediaStoreUrl),
                         'name' => $this->replaceXmlEntities($simpleProduct->getName()),
-                        'description' => $this->replaceXmlEntities($product->getData($this->_descriptionAttribute)),
+                        'description' => $product->getData($this->_descriptionAttribute),
                         'available' => $simpleProduct->getIsSalable(),
                         'categories' => $simpleProduct->getCategoryIds(),
                         'group_id' => $groupId,
@@ -499,7 +499,7 @@ class Feed
                     'price' => $finalPrice,
                     'picture' => $productImage,
                     'name' => $this->replaceXmlEntities($product->getName()),
-                    'description' => $this->replaceXmlEntities($product->getData($this->_descriptionAttribute)),
+                    'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
                     'categories' => $product->getCategoryIds(),
                     'group_id' => $groupId,
@@ -721,6 +721,8 @@ class Feed
             {
                 $product['description'] = substr($product['description'],0,200);
             }
+
+            $product['description'] = $this->replaceXmlEntities($product['description']);
 
             if($this->hasHtml($product['description']))
             {
