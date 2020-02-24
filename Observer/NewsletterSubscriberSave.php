@@ -11,6 +11,9 @@ use Magento\Customer\Model\Customer;
 
 /**
  * Class NewsletterSubscriberSave
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Observer
  */
 class NewsletterSubscriberSave implements ObserverInterface

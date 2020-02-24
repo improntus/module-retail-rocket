@@ -10,6 +10,9 @@ use Magento\Sales\Model\Order\Item;
 
 /**
  * Class SalesQuoteProductAddAfter
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Observer
  */
 class SalesQuoteProductAddAfter implements ObserverInterface

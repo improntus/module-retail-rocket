@@ -7,6 +7,9 @@ use Magento\Framework\Option\ArrayInterface;
 
 /**
  * Class ExtraAttributes
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Model\Config\Source
  */
 class ExtraAttributes implements ArrayInterface

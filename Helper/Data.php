@@ -11,6 +11,9 @@ use Magento\Store\Model\ScopeInterface;
 
 /**
  * Class Data
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Helper
  */
 class Data extends AbstractHelper

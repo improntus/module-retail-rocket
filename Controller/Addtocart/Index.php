@@ -23,6 +23,9 @@ use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 
 /**
  * Class Index
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Controller\Index
  */
 class Index extends \Magento\Checkout\Controller\Cart

@@ -10,6 +10,9 @@ use Magento\Framework\Event\ObserverInterface;
 
 /**
  * Class CatalogControllerProductInitAfter
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Observer
  */
 class CatalogControllerProductInitAfter implements ObserverInterface

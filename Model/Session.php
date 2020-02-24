@@ -6,6 +6,9 @@ use Magento\Framework\Session\SessionManager;
 
 /**
  * Class Session
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Model
  */
 class Session extends SessionManager

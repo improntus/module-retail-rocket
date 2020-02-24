@@ -8,6 +8,9 @@ use Magento\Framework\View\Element\Template;
 
 /**
  * Class Tracker
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block
  */
 class Product extends Tracker

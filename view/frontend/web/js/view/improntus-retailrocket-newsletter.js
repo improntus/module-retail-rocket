@@ -29,7 +29,6 @@ define([
 
                             try {
                                 rrApi.setEmail(userData.email, userAdditional);
-                                console.log(eventData);
                             } catch(e) {}
                         }
                     }

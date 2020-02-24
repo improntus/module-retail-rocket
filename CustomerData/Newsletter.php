@@ -10,6 +10,9 @@ use Magento\Framework\UrlInterface;
 
 /**
  * Class Fpc
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\CustomerData
  */
 class Newsletter implements SectionSourceInterface
