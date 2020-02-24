@@ -151,8 +151,8 @@ class Feed
         $this->_driverFile = $driverFile;
         $this->_viewAssetRepo = $viewAssetRepo;
         $this->_descriptionAttribute = $helper->getDescriptionAttribute() ? $helper->getDescriptionAttribute() : 'description';
-        $this->_modelAttribute = $helper->getModelAttribute();
-        $this->_vendorAttribute = $helper->getVendorAttribute();
+        $modelAttribute = $helper->getModelAttribute();
+        $vendorAttribute = $helper->getVendorAttribute();
         $this->_attributeCollection = $attributeCollection;
 
         $extraAttributes = $helper->getExtraAttributes();
@@ -180,31 +180,29 @@ class Feed
             }
         }
 
-        if($this->_vendorAttribute)
+        if($vendorAttribute)
         {
-            $vendorAttributeCode = $this->_vendorAttribute;
             $this->_vendorAttribute = [];
 
             foreach ($eavAttributeCollection as $_attribute)
             {
-                if($_attribute['attribute_code'] == $vendorAttributeCode)
+                if($_attribute['attribute_code'] == $vendorAttribute)
                 {
-                    $this->_vendorAttribute[$vendorAttributeCode] = $_attribute['frontend_input'];
+                    $this->_vendorAttribute[$vendorAttribute] = $_attribute['frontend_input'];
                     continue;
                 }
             }
         }
 
-        if($this->_modelAttribute)
+        if($modelAttribute)
         {
-            $modelAttributeCode = $this->_modelAttribute;
             $this->_modelAttribute = [];
 
             foreach ($eavAttributeCollection as $_attribute)
             {
-                if($modelAttributeCode == $this->_modelAttribute)
+                if($modelAttribute == $this->_modelAttribute)
                 {
-                    $this->_modelAttribute[$modelAttributeCode] = $_attribute['frontend_input'];
+                    $this->_modelAttribute[$vendorAttribute] = $_attribute['frontend_input'];
                     continue;
                 }
             }
