@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
+ * @package Improntus_RetailRocket
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="head.additional">
+            <block class="Improntus\RetailRocket\Block\Tracker" ifconfig="retailrocket/configuration/enabled" template="Improntus_RetailRocket::head.phtml"/>
+        </referenceContainer>
+        <referenceBlock name="after.body.start">
+            <block class="Magento\Framework\View\Element\Template" ifconfig="retailrocket/configuration/enabled" name="improntus.retailrocket.fpc" before="-" template="Improntus_RetailRocket::fpc.phtml">
+                <arguments>
+                    <argument name="jsLayout" xsi:type="array">
+                        <item name="components" xsi:type="array">
+                            <item name="improntusRetailrocketFpc" xsi:type="array">
+                                <item name="component" xsi:type="string">Improntus_RetailRocket/js/view/improntus-retailrocket-fpc</item>
+                            </item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+            <block class="Magento\Framework\View\Element\Template" ifconfig="retailrocket/configuration/enabled" name="improntus.retailrocket.newsletter" before="-" template="Improntus_RetailRocket::newsletter.phtml">
+                <arguments>
+                    <argument name="jsLayout" xsi:type="array">
+                        <item name="components" xsi:type="array">
+                            <item name="improntusRetailrocketNewsletter" xsi:type="array">
+                                <item name="component" xsi:type="string">Improntus_RetailRocket/js/view/improntus-retailrocket-newsletter</item>
+                            </item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
+<!--        http://retailrocketm2.improntus.com/retailrocket/addtocart/index/sku/MH11-XS-Orange-->

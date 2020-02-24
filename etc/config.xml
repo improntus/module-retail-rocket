@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
+ * @package Improntus_RetailRocket
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <retailrocket>
+            <configuration>
+                <enabled>0</enabled>
+                <description_attribute>description</description_attribute>
+                <model_attribute>0</model_attribute>
+                <vendor_attribute>0</vendor_attribute>
+            </configuration>
+        </retailrocket>
+    </default>
+</config>

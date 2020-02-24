@@ -1,0 +1,12 @@
+.retailrocket-config-tab .admin__page-nav-title{
+    background-image: url('../images/logo.svg') !important;
+    background-repeat: no-repeat !important;
+    background-size: 120px !important;
+    background-position: left!important;
+    padding: 25px !important;
+    background-position-x: 15px !important;
+}
+
+.retailrocket-config-tab .admin__page-nav-title strong {
+    display: none!important;
+}

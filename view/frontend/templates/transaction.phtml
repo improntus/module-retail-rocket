@@ -1,0 +1,37 @@
+<?php
+
+/** @var Magento\Sales\Model\Order $order */
+$order = $block->getOrder();
+
+//Failsafe for bad order id
+if (!$order) {
+	return;
+}
+
+$orderItems = [];
+
+foreach ($order->getAllVisibleItems() as $allVisibleItem)
+{
+    $orderItems[] = [
+            'id'  => (int)$allVisibleItem->getProduct()->getId(),
+            'qnt' => (int)$allVisibleItem->getQtyOrdered(),
+            'price' => (int)$allVisibleItem->getPrice()
+    ];
+}
+
+?>
+
+<?php if($order->getStatus() != 'canceled'): ?>
+    <!-- Begin RetailRocket Transaction Event -->
+    <script type="text/javascript">
+        (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
+            try {
+                rrApi.order({
+                    "transaction": "<?= $order->getIncrementId()?>",
+                    "items": <?= json_encode($orderItems) ?>
+            });
+            } catch(e) {}
+        })
+    </script>
+    <!-- End RetailRocket Transaction Event -->
+<?php endif ?>

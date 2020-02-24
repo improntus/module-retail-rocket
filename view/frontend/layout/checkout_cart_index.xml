@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
+ * @package Improntus_RetailRocket
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="after.body.start">
+            <block class="Improntus\RetailRocket\Block\Tracker" ifconfig="retailrocket/configuration/enabled" name="improntus.retailrocket.fpc.cart" before="-" template="Improntus_RetailRocket::addtocart.phtml" cacheable="false" />
+        </referenceBlock>
+    </body>
+</page>

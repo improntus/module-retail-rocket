@@ -1,0 +1,13 @@
+<?php /** @var Improntus\RetailRocket\Block\Tracker $block */ ?>
+
+<?php $addToCart = $block->getAddToCart() ?>
+
+<?php if($addToCart): ?>
+    <script type="text/javascript">
+        (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
+            try { rrApi.addToBasket(<?= $addToCart ?>) } catch(e) {}
+        })
+    </script>
+<?php endif ?>
+
+

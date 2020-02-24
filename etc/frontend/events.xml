@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
+ * @package Improntus_RetailRocket
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="sales_quote_product_add_after">
+        <observer name="improntus_retailrocket_add_to_cart" instance="Improntus\RetailRocket\Observer\SalesQuoteProductAddAfter" />
+    </event>
+    <event name="controller_action_predispatch_multishipping_checkout_index">
+        <observer name="improntus_retailrocket_initiate_checkout_multi" instance="Improntus\RetailRocket\Observer\InitiateCheckout" />
+    </event>
+    <event name="controller_action_predispatch_checkout_onepage_index">
+        <observer name="improntus_retailrocket_initiate_checkout_onepage" instance="Improntus\RetailRocket\Observer\InitiateCheckout" />
+    </event>
+    <event name="controller_action_predispatch_checkout_index_index">
+        <observer name="improntus_retailrocket_initiate_checkout_index_index" instance="Improntus\RetailRocket\Observer\InitiateCheckout" />
+    </event>
+    <event name="catalog_controller_product_init_after">
+        <observer name="improntus_retailrocket_product_init_after" instance="Improntus\RetailRocket\Observer\CatalogControllerProductInitAfter" />
+    </event>
+    <event name="controller_action_predispatch_newsletter_subscriber_new">
+        <observer name="improntus_retailrocket_newsletter_subscriber_new" instance="Improntus\RetailRocket\Observer\NewsletterSubscriberNew" />
+    </event>
+    <event name="controller_action_predispatch_newsletter_manage_save">
+        <observer name="improntus_retailrocket_newsletter_manage_save" instance="Improntus\RetailRocket\Observer\NewsletterSubscriberSave" />
+    </event>
+</config>
