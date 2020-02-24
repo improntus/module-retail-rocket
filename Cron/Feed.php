@@ -722,7 +722,13 @@ class Feed
                 $product['description'] = substr($product['description'],0,200);
             }
 
-            $products .= "<description><![CDATA[{$product['description']}]]></description>";
+            if($this->hasHtml($product['description']))
+            {
+                $products .= "<description><![CDATA[{$product['description']}]]></description>";
+            }
+            else{
+                $products .= "<description>{$product['description']}</description>";
+            }
 
             if($product['model'])
             {
@@ -766,5 +772,19 @@ class Feed
                 "&" => "&amp;",
             )
         );
+    }
+
+    /**
+     * @param string $string
+     * @return bool
+     */
+    public function hasHtml($string)
+    {
+        if($string != strip_tags($string))
+        {
+            return true;
+        }
+
+        return false;
     }
 }
