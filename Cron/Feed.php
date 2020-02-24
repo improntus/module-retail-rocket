@@ -717,6 +717,9 @@ class Feed
                 }
             }
 
+
+            $product['description'] = strip_tags($product['description']);
+
             if(strlen($product['description']) >= 200)
             {
                 $product['description'] = substr($product['description'],0,200);
