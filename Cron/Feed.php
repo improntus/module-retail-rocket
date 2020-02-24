@@ -22,6 +22,9 @@ use Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection as AttributeColl
 
 /**
  * Class Feed
+ *
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
  */
 class Feed
@@ -94,14 +97,14 @@ class Feed
     protected $_descriptionAttribute;
 
     /**
-     * @var string
+     * @var array
      */
-    protected $_modelAttribute;
+    protected $_modelAttribute = [];
 
     /**
-     * @var string
+     * @var array
      */
-    protected $_vendorAttribute;
+    protected $_vendorAttribute = [];
 
     /**
      * @var array
@@ -154,11 +157,11 @@ class Feed
 
         $extraAttributes = $helper->getExtraAttributes();
 
+        $eavAttributeCollection = $this->_attributeCollection->getData();
+
         if($extraAttributes)
         {
             $attributeCodes = explode(',',$extraAttributes);
-
-            $eavAttributeCollection = $this->_attributeCollection->getData();
 
             foreach ($attributeCodes as $attributeCode)
             {
@@ -169,10 +172,41 @@ class Feed
                     if($_attribute['attribute_code'] == $attributeCode)
                     {
                         $type = $_attribute['frontend_input'];
+                        continue;
                     }
                 }
 
                 $this->_extraAttributes[$attributeCode] = $type;
+            }
+        }
+
+        if($this->_vendorAttribute)
+        {
+            $vendorAttributeCode = $this->_vendorAttribute;
+            $this->_vendorAttribute = [];
+
+            foreach ($eavAttributeCollection as $_attribute)
+            {
+                if($_attribute['attribute_code'] == $vendorAttributeCode)
+                {
+                    $this->_vendorAttribute[$vendorAttributeCode] = $_attribute['frontend_input'];
+                    continue;
+                }
+            }
+        }
+
+        if($this->_modelAttribute)
+        {
+            $modelAttributeCode = $this->_modelAttribute;
+            $this->_modelAttribute = [];
+
+            foreach ($eavAttributeCollection as $_attribute)
+            {
+                if($modelAttributeCode == $this->_modelAttribute)
+                {
+                    $this->_modelAttribute[$modelAttributeCode] = $_attribute['frontend_input'];
+                    continue;
+                }
             }
         }
     }
@@ -267,14 +301,14 @@ class Feed
 
         $collection->addAttributeToSelect($this->_descriptionAttribute);
 
-        if($this->_modelAttribute)
+        if(count($this->_modelAttribute))
         {
-            $collection->addAttributeToSelect($this->_modelAttribute);
+            $collection->addAttributeToSelect(key($this->_modelAttribute));
         }
 
-        if($this->_vendorAttribute)
+        if(count($this->_vendorAttribute))
         {
-            $collection->addAttributeToSelect($this->_vendorAttribute);
+            $collection->addAttributeToSelect(key($this->_vendorAttribute));
         }
 
         if(count($this->_extraAttributes))
@@ -356,14 +390,24 @@ class Feed
                     'params' => $params
                 ];
 
-                if($this->_modelAttribute)
+                if(count($this->_modelAttribute))
                 {
-                    $result[$i][$this->_modelAttribute] = $this->replaceXmlEntities($product->getData($this->_modelAttribute));
+                    $key = key($this->_modelAttribute);
+                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['model'] = null;
                 }
 
-                if($this->_vendorAttribute)
+                if(count($this->_vendorAttribute))
                 {
-                    $result[$i][$this->_vendorAttribute] = $this->replaceXmlEntities($product->getData($this->_vendorAttribute));
+                    $key = key($this->_vendorAttribute);
+                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['vendor'] = null;
                 }
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
@@ -408,14 +452,24 @@ class Feed
                         'params' => $params
                     ];
 
-                    if($this->_modelAttribute)
+                    if(count($this->_modelAttribute))
                     {
-                        $result[$i][$this->_modelAttribute] = $this->replaceXmlEntities($product->getData($this->_modelAttribute));
+                        $key = key($this->_modelAttribute);
+                        $result[$i]['model'] = $this->getAttributeValue($simpleProduct,$key,$this->_modelAttribute[$key]);
+                    }
+                    else
+                    {
+                        $result[$i]['model'] = null;
                     }
 
-                    if($this->_vendorAttribute)
+                    if(count($this->_vendorAttribute))
                     {
-                        $result[$i][$this->_vendorAttribute] = $this->replaceXmlEntities($product->getData($this->_vendorAttribute));
+                        $key = key($this->_vendorAttribute);
+                        $result[$i]['vendor'] = $this->getAttributeValue($simpleProduct,$key,$this->_vendorAttribute[$key]);
+                    }
+                    else
+                    {
+                        $result[$i]['vendor'] = null;
                     }
 
                     $applySpecial = $this->applySpecialPrice($simpleProduct->getPrice(),$simpleProduct->getSpecialPrice(),
@@ -454,14 +508,24 @@ class Feed
                     'params' => $params
                 ];
 
-                if($this->_modelAttribute)
+                if(count($this->_modelAttribute))
                 {
-                    $result[$i][$this->_modelAttribute] = $this->replaceXmlEntities($product->getData($this->_modelAttribute));
+                    $key = key($this->_modelAttribute);
+                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['model'] = null;
                 }
 
-                if($this->_vendorAttribute)
+                if(count($this->_vendorAttribute))
                 {
-                    $result[$i][$this->_vendorAttribute] = $this->replaceXmlEntities($product->getData($this->_vendorAttribute));
+                    $key = key($this->_vendorAttribute);
+                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['vendor'] = null;
                 }
 
                 if($applySpecial)
@@ -655,16 +719,16 @@ class Feed
                 }
             }
 
-            $products .= "<description><![CDATA[{$product[$this->_descriptionAttribute]}]]></description>";
+            $products .= "<description><![CDATA[{$product['description']}]]></description>";
 
-            if($this->_modelAttribute)
+            if($product['model'])
             {
-                $products .= "<model>{$this->_modelAttribute}</model>";
+                $products .= "<model>{$product['model']}</model>";
             }
 
-            if($this->_vendorAttribute)
+            if($product['vendor'])
             {
-                $products .= "<vendor>{$this->_vendorAttribute}</vendor>";
+                $products .= "<vendor>{$product['vendor']}</vendor>";
             }
 
             $products .= "</offer>";
