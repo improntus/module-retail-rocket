@@ -429,6 +429,8 @@ class Feed
                     }
                 }
 
+                $i++;
+
                 continue;
             }
 
