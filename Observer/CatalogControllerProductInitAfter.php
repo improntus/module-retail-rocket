@@ -63,9 +63,24 @@ class CatalogControllerProductInitAfter implements ObserverInterface
 			return $this;
 		}
 
+        $productIds = [];
+        $productIds[] = $product->getId();
+
+		if($product->getTypeId() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE)
+		{
+            $simpleProductIds = $product->getTypeInstance()->getUsedProductIds($product);
+            $productIds = array_merge($productIds,$simpleProductIds);
+        }
+
+        if($product->getTypeId() == \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE)
+        {
+            $childProductIds = $product->getTypeInstance()->getAssociatedProductIds($product);
+            $productIds = array_merge($productIds,$childProductIds);
+        }
+
 		$data = [
 			'type'        => 'product',
-			'product_ids' => [$product->getId()],
+			'product_ids' => $productIds,
 		];
 
 		$this->_retailRocketSession->setViewProduct($data);

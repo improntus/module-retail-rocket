@@ -9,9 +9,10 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="head.additional">
-            <block class="Improntus\RetailRocket\Block\Tracker" ifconfig="retailrocket/configuration/enabled" template="Improntus_RetailRocket::head.phtml"/>
+            <block class="Improntus\RetailRocket\Block\Tracker" name="improntus.retailrocket.head" ifconfig="retailrocket/configuration/enabled" template="Improntus_RetailRocket::head.phtml"/>
         </referenceContainer>
         <referenceBlock name="after.body.start">
+            <block class="Improntus\RetailRocket\Block\Tracker" ifconfig="retailrocket/configuration/enabled" name="improntus.retailrocket.customer_email" template="Improntus_RetailRocket::customer_email.phtml"/>
             <block class="Magento\Framework\View\Element\Template" ifconfig="retailrocket/configuration/enabled" name="improntus.retailrocket.fpc" before="-" template="Improntus_RetailRocket::fpc.phtml">
                 <arguments>
                     <argument name="jsLayout" xsi:type="array">

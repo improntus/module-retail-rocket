@@ -1,0 +1,18 @@
+<?php /** @var Improntus\RetailRocket\Block\Tracker $block */ ?>
+<?php $customerLogged = $block->getCustomerLogged() ?>
+
+<?php if(is_array($customerLogged) && isset($customerLogged['user_data']['email'])): ?>
+    <script type="text/javascript">
+        (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
+
+            var email = "<?= $customerLogged['user_data']['email'] ?>";
+            var userAdditional = <?= json_encode($customerLogged['user_data']['additional'])?>;
+
+            try {
+                rrApi.setEmail(email, userAdditional);
+            } catch(e) {}
+        })
+    </script>
+<?php endif ?>
+
+

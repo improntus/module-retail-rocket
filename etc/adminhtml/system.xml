@@ -47,6 +47,10 @@
                     <comment>Extra attributes to use</comment>
                     <source_model>Improntus\RetailRocket\Model\Config\Source\ExtraAttributes</source_model>
                 </field>
+                <field id="privacy_policies_url" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Privacy policies URL</label>
+                    <validate>required-entry</validate>
+                </field>
             </group>
         </section>
     </system>

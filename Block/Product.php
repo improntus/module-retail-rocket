@@ -4,6 +4,7 @@ namespace Improntus\RetailRocket\Block;
 
 use Improntus\RetailRocket\Helper\Data;
 use Improntus\RetailRocket\Model\Session;
+use Magento\Customer\Model\Customer;
 use Magento\Framework\View\Element\Template;
 
 /**
@@ -26,17 +27,19 @@ class Product extends Tracker
      * @param Data $helper
      * @param Session $retailRocketSession
      * @param array $data
+     * @param Customer $customer
      */
     public function __construct(
         Template\Context $context,
         Data $helper,
         Session $retailRocketSession,
-        array $data = []
+        array $data = [],
+        Customer $customer
     )
     {
         $this->_retailRocketSession = $retailRocketSession;
 
-        parent::__construct($context, $helper, $data);
+        parent::__construct($context, $helper, $data,$customer);
     }
 
     /**
@@ -55,7 +58,7 @@ class Product extends Tracker
     <!-- Begin RetailRocket ProductView Event -->
     <script type="text/javascript">
                 (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
-            try{ rrApi.groupView(['$productIds']); } catch(e) {}
+            try{ rrApi.groupView([$productIds]); } catch(e) {}
         })
     </script>
     <!-- End RetailRocket ProductView Event -->

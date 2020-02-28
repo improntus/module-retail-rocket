@@ -42,6 +42,27 @@ class Session extends SessionManager
     }
 
     /**
+     * @param $data
+     * @return $this
+     */
+    public function setCustomerLogged($data)
+    {
+        $this->setData('customer_logged_in', $data);
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCustomerLogged()
+    {
+        $data = $this->getData('customer_logged_in');
+        $this->unsetData('customer_logged_in');
+
+        return $data;
+    }
+
+    /**
      * @return bool
      */
     public function hasAddToCart()

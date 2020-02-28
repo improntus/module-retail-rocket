@@ -28,4 +28,7 @@
     <event name="controller_action_predispatch_newsletter_manage_save">
         <observer name="improntus_retailrocket_newsletter_manage_save" instance="Improntus\RetailRocket\Observer\NewsletterSubscriberSave" />
     </event>
+    <event name="customer_login">
+        <observer name="improntus_retailrocket_customer_login" instance="Improntus\RetailRocket\Observer\CustomerLogin" />
+    </event>
 </config>

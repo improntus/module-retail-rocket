@@ -328,6 +328,107 @@ class Feed
 
             if($product->getTypeId() == \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE)
             {
+                $params = [];
+
+                if(count($this->_extraAttributes))
+                {
+                    foreach ($this->_extraAttributes as $extraAttribute => $type)
+                    {
+                        $params[] = [
+                            'code' => $extraAttribute,
+                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                        ];
+                    }
+                }
+
+                $result[$i] = [
+                    'id' => $product->getId(),
+                    'url' => $product->getProductUrl(),
+                    'price' => (float)$product->getMinimalPrice(),
+                    'picture' => $this->getProductImageUrl($product->getImage(),$mediaStoreUrl),
+                    'name' => $this->replaceXmlEntities($product->getName()),
+                    'description' => $this->replaceXmlEntities($product->getData($this->_descriptionAttribute)),
+                    'available' => $product->getIsSalable(),
+                    'categories' => $product->getCategoryIds(),
+                    'group_id' => null,
+                    'params' => $params
+                ];
+
+                $groupId = $product->getId();
+
+                if(count($this->_modelAttribute))
+                {
+                    $key = key($this->_modelAttribute);
+                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['model'] = null;
+                }
+
+                if(count($this->_vendorAttribute))
+                {
+                    $key = key($this->_vendorAttribute);
+                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['vendor'] = null;
+                }
+
+                $childProducts = $product->getTypeInstance()->getAssociatedProducts($product);
+
+                foreach ($childProducts as $childProduct)
+                {
+                    $i++;
+
+                    $params = [];
+
+                    if(count($this->_extraAttributes))
+                    {
+                        foreach ($this->_extraAttributes as $extraAttribute => $type)
+                        {
+                            $params[] = [
+                                'code' => $extraAttribute,
+                                'label' => $this->getAttributeValue($childProduct,$extraAttribute,$type)
+                            ];
+                        }
+                    }
+
+                    $result[$i] = [
+                        'id' => $childProduct->getId(),
+                        'url' => $childProduct->getProductUrl(),
+                        'price' => (float)$childProduct->getPrice(),
+                        'picture' => $this->getProductImageUrl($childProduct->getImage(),$mediaStoreUrl),
+                        'name' => $this->replaceXmlEntities($childProduct->getName()),
+                        'description' => $this->replaceXmlEntities($childProduct->getData($this->_descriptionAttribute)),
+                        'available' => $childProduct->getIsSalable(),
+                        'categories' => $childProduct->getCategoryIds(),
+                        'group_id' => $groupId,
+                        'params' => $params
+                    ];
+
+                    if(count($this->_modelAttribute))
+                    {
+                        $key = key($this->_modelAttribute);
+                        $result[$i]['model'] = $this->getAttributeValue($childProduct,$key,$this->_modelAttribute[$key]);
+                    }
+                    else
+                    {
+                        $result[$i]['model'] = null;
+                    }
+
+                    if(count($this->_vendorAttribute))
+                    {
+                        $key = key($this->_vendorAttribute);
+                        $result[$i]['vendor'] = $this->getAttributeValue($childProduct,$key,$this->_vendorAttribute[$key]);
+                    }
+                    else
+                    {
+                        $result[$i]['vendor'] = null;
+                    }
+                }
+
                 continue;
             }
 

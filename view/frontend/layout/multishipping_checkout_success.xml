@@ -11,5 +11,8 @@
         <referenceContainer name="after.body.start">
             <block class="Improntus\RetailRocket\Block\Tracker" name="improntus_retailrocket_transaction" template="Improntus_RetailRocket::transaction.phtml"/>
         </referenceContainer>
+        <referenceBlock name="content">
+            <block class="Improntus\RetailRocket\Block\Tracker" name="improntus_retailrocket_customer_email_transaction" after="checkout.success" template="Improntus_RetailRocket::customer_email_checkout.phtml"/>
+        </referenceBlock>
     </body>
 </page>

@@ -100,6 +100,14 @@ class Data extends AbstractHelper
     }
 
     /**
+     * @return string
+     */
+    public function getPrivacyPoliciesUrl()
+    {
+        return $this->scopeConfig->getValue('retailrocket/configuration/privacy_policies_url', ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
      * @return Session
      */
     public function getSession()

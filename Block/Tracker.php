@@ -2,6 +2,7 @@
 
 namespace Improntus\RetailRocket\Block;
 
+use Magento\Customer\Model\Customer;
 use Magento\Framework\View\Element\Template;
 use Improntus\RetailRocket\Helper\Data;
 
@@ -20,18 +21,26 @@ class Tracker extends \Magento\Framework\View\Element\Template
 	protected $_helper;
 
     /**
+     * @var Customer
+     */
+    protected $_customer;
+
+    /**
      * Tracker constructor.
      * @param Template\Context $context
      * @param Data $helper
      * @param array $data
+     * @param Customer $customer
      */
 	public function __construct(
 	    Template\Context $context,
         Data $helper,
-        array $data = []
+        array $data = [],
+        Customer $customer
     )
     {
         $this->_helper = $helper;
+        $this->_customer = $customer;
 
         parent::__construct($context, $data);
     }
@@ -67,5 +76,55 @@ class Tracker extends \Magento\Framework\View\Element\Template
     public function setAddToCart($value)
     {
         return $this->_helper->getSession()->setAddToCart($value);
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getCustomerLogged()
+    {
+        return $this->_helper->getSession()->getCustomerLogged();
+    }
+
+    /**
+     * @param $dob
+     * @return string
+     */
+    public function getCustomerBirthdate($dob)
+    {
+        return date('d.m.Y',strtotime($dob));
+    }
+
+    /**
+     * @param $birthDate
+     * @return false|int|string
+     */
+    public function getCustomerAge($birthDate)
+    {
+        $birthDate = date('d.m.Y',strtotime($birthDate));
+        $birthDate = explode(".", $birthDate);
+
+        $age = (date("md", date("U", mktime(0, 0, 0, $birthDate[1], $birthDate[0], $birthDate[2]))) > date("md")
+            ? ((date("Y") - $birthDate[2]) - 1)
+            : (date("Y") - $birthDate[2]));
+
+        return $age;
+    }
+
+    /**
+     * @param $gender
+     * @return string
+     */
+    public function getCustomerGender($gender)
+    {
+        return $this->_customer->getAttribute('gender')->getSource()->getOptionText($gender);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPrivacyPoliciesUrl()
+    {
+        return $this->_helper->getPrivacyPoliciesUrl();
     }
 }
