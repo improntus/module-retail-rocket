@@ -341,6 +341,9 @@ class Feed
                     }
                 }
 
+                $categoryIds = $product->getCategoryIds();
+                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
                 $result[$i] = [
                     'id' => $product->getId(),
                     'url' => $product->getProductUrl(),
@@ -349,7 +352,7 @@ class Feed
                     'name' => $this->replaceXmlEntities($product->getName()),
                     'description' => $this->replaceXmlEntities($product->getData($this->_descriptionAttribute)),
                     'available' => $product->getIsSalable(),
-                    'categories' => $product->getCategoryIds(),
+                    'categories' => $lastCategoryId,
                     'group_id' => null,
                     'params' => $params
                 ];
@@ -395,6 +398,9 @@ class Feed
                         }
                     }
 
+                    $categoryIds = $childProduct->getCategoryIds();
+                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
                     $result[$i] = [
                         'id' => $childProduct->getId(),
                         'url' => $childProduct->getProductUrl(),
@@ -403,7 +409,7 @@ class Feed
                         'name' => $this->replaceXmlEntities($childProduct->getName()),
                         'description' => $this->replaceXmlEntities($childProduct->getData($this->_descriptionAttribute)),
                         'available' => $childProduct->getIsSalable(),
-                        'categories' => $childProduct->getCategoryIds(),
+                        'categories' => $lastCategoryId,
                         'group_id' => $groupId,
                         'params' => $params
                     ];
@@ -478,6 +484,9 @@ class Feed
                     }
                 }
 
+                $categoryIds = $product->getCategoryIds();
+                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
                 $result[$i] = [
                     'id' => $product->getId(),
                     'url' => $product->getProductUrl(),
@@ -486,7 +495,7 @@ class Feed
                     'name' => $this->replaceXmlEntities($product->getName()),
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
-                    'categories' => $product->getCategoryIds(),
+                    'categories' => $lastCategoryId,
                     'group_id' => null,
                     'params' => $params
                 ];
@@ -540,6 +549,9 @@ class Feed
                         }
                     }
 
+                    $categoryIds = $simpleProduct->getCategoryIds();
+                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
                     $result[$i] = [
                         'id' => $simpleProduct->getId(),
                         'url' => $simpleProduct->getProductUrl(),
@@ -548,7 +560,7 @@ class Feed
                         'name' => $this->replaceXmlEntities($simpleProduct->getName()),
                         'description' => $product->getData($this->_descriptionAttribute),
                         'available' => $simpleProduct->getIsSalable(),
-                        'categories' => $simpleProduct->getCategoryIds(),
+                        'categories' => $lastCategoryId,
                         'group_id' => $groupId,
                         'params' => $params
                     ];
@@ -596,6 +608,9 @@ class Feed
                     }
                 }
 
+                $categoryIds = $product->getCategoryIds();
+                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
                 $result[$i] = [
                     'id' => $product->getId(),
                     'url' => $product->getProductUrl(),
@@ -604,7 +619,7 @@ class Feed
                     'name' => $this->replaceXmlEntities($product->getName()),
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
-                    'categories' => $product->getCategoryIds(),
+                    'categories' => $lastCategoryId,
                     'group_id' => $groupId,
                     'params' => $params
                 ];
@@ -802,9 +817,9 @@ class Feed
                 $products .= "<oldprice>{$product['oldprice']}</oldprice>";
             }
 
-            foreach ($product['categories'] as $category)
+            if(!is_null($product['categories']))
             {
-                $products .= "<categoryId>$category</categoryId>";
+                $products .= "<categoryId>{$product['categories']}</categoryId>";
             }
 
             $products .= "<picture>{$product['picture']}</picture>";
