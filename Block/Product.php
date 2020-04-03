@@ -8,7 +8,7 @@ use Magento\Customer\Model\Customer;
 use Magento\Framework\View\Element\Template;
 
 /**
- * Class Tracker
+ * Class Product
  *
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus

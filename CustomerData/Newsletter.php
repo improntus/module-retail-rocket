@@ -9,7 +9,7 @@ use Magento\Customer\Model\Session;
 use Magento\Framework\UrlInterface;
 
 /**
- * Class Fpc
+ * Class Newsletter
  *
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
