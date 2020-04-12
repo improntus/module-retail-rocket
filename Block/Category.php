@@ -11,6 +11,7 @@ use Magento\Framework\View\Element\Template\Context;
 /**
  * Class Category
  *
+ * @version 1.0.1
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block

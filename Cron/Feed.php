@@ -5,24 +5,33 @@ namespace Improntus\RetailRocket\Cron;
 use Exception;
 use Improntus\RetailRocket\Helper\Data;
 use Magento\Catalog\Model\CategoryFactory;
+use Magento\Catalog\Model\Product\Attribute\Source\Status;
+use Magento\Catalog\Model\Product\Type;
 use Magento\Catalog\Model\Product\Visibility;
+use Magento\CatalogInventory\Api\StockRegistryInterface;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Data\Tree\Node\Collection;
 use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Filesystem\File\Write;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository;
+use Magento\GroupedProduct\Model\Product\Type\Grouped;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection as AttributeCollection;
+use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as ConfigurableProduct;
+use Magento\Catalog\Api\ProductRepositoryInterface;
 
 /**
  * Class Feed
  *
+ * @version 1.0.1
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
@@ -117,6 +126,21 @@ class Feed
     protected $_attributeCollection;
 
     /**
+     * @var StockRegistryInterface
+     */
+    protected $_stockRegistry;
+
+    /**
+     * @var ConfigurableProduct
+     */
+    protected $_configurable;
+
+    /**
+     * @var ProductRepositoryInterface
+     */
+    protected $_productRepository;
+
+    /**
      * Feed constructor.
      * @param Data $helper
      * @param LoggerInterface $logger
@@ -128,6 +152,9 @@ class Feed
      * @param File $driverFile
      * @param Repository $viewAssetRepo
      * @param AttributeCollection $attributeCollection
+     * @param StockRegistryInterface $stockRegistry
+     * @param ConfigurableProduct $configurable
+     * @param ProductRepositoryInterface $productRepository
      */
     public function __construct(
         Data $helper,
@@ -139,7 +166,10 @@ class Feed
         TimezoneInterface $timezone,
         File $driverFile,
         Repository $viewAssetRepo,
-        AttributeCollection $attributeCollection
+        AttributeCollection $attributeCollection,
+        StockRegistryInterface $stockRegistry,
+        ConfigurableProduct $configurable,
+        ProductRepositoryInterface $productRepository
     ) {
         $this->_retailRocketHelper = $helper;
         $this->logger = $logger;
@@ -154,6 +184,9 @@ class Feed
         $modelAttribute = $helper->getModelAttribute();
         $vendorAttribute = $helper->getVendorAttribute();
         $this->_attributeCollection = $attributeCollection;
+        $this->_stockRegistry = $stockRegistry;
+        $this->_configurable = $configurable;
+        $this->_productRepository = $productRepository;
 
         $extraAttributes = $helper->getExtraAttributes();
 
@@ -277,6 +310,7 @@ class Feed
      * @param int $websiteId
      * @param string $mediaStoreUrl
      * @return array
+     * @throws NoSuchEntityException
      */
     public function getProducts($storeId,$websiteId,$mediaStoreUrl)
     {
@@ -318,15 +352,30 @@ class Feed
         }
 
         $i = 0;
+        $notVisibleProductsParents = [];
 
         foreach ($collection as $product)
         {
             if($product->getVisibility() == Visibility::VISIBILITY_NOT_VISIBLE)
             {
+                $parentProduct = $this->_configurable->getParentIdsByChild($product->getId());
+
+                if(count($parentProduct))
+                {
+                    $parent = array_pop($parentProduct);
+
+                    if(!isset($notVisibleProductsParents[$parent]))
+                    {
+                        $notVisibleProductsParents[$parent] = [];
+                    }
+
+                    $notVisibleProductsParents[$parent][] = $product->getId();
+                }
+
                 continue;
             }
 
-            if($product->getTypeId() == \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE)
+            if($product->getTypeId() == Grouped::TYPE_CODE)
             {
                 $params = [];
 
@@ -456,7 +505,7 @@ class Feed
 
             $productImage = $this->getProductImageUrl($product->getImage(),$mediaStoreUrl);
 
-            if($product->getTypeId() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE)
+            if($product->getTypeId() == Configurable::TYPE_CODE)
             {
                 $groupId = $product->getId();
 
@@ -522,6 +571,36 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.1) */
+                if(isset($notVisibleProductsParents[$product->getId()]))
+                {
+                    if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
+                    {
+                        $simpleIdsFromObject = [];
+
+                        foreach ($simpleProducts as $simpleProduct)
+                        {
+                            $simpleIdsFromObject[] = $simpleProduct->getId();
+                        }
+
+                        $diff = array_diff($notVisibleProductsParents[$product->getId()],$simpleIdsFromObject);
+
+                        if(count($diff))
+                        {
+                            foreach ($diff as $_productId)
+                            {
+                                try{
+                                    $productToAdd = $this->_productRepository->getById($_productId);
+                                    $simpleProducts[] = $productToAdd;
+                                }
+                                catch (Exception $e){
+                                    $this->logger->error($e->getMessage());
+                                }
+                            }
+                        }
+                    }
+                }
+
                 foreach ($simpleProducts as $simpleProduct)
                 {
                     $i++;
@@ -552,6 +631,19 @@ class Feed
                     $categoryIds = $simpleProduct->getCategoryIds();
                     $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
 
+                    if($simpleProduct->getTypeId() == Type::TYPE_SIMPLE)
+                    {
+                        $stockItem = $this->_stockRegistry->getStockItem(
+                            $simpleProduct->getId()
+                        );
+
+                        $productAvailable = $simpleProduct->getStatus() == Status::STATUS_ENABLED
+                            && $stockItem->getQty() > 0 && $stockItem->getIsInStock();
+                    }
+                    else{
+                        $productAvailable = $simpleProduct->getIsSalable();
+                    }
+
                     $result[$i] = [
                         'id' => $simpleProduct->getId(),
                         'url' => $simpleProduct->getProductUrl(),
@@ -559,7 +651,7 @@ class Feed
                         'picture' => $this->getProductImageUrl($simpleProduct->getImage(),$mediaStoreUrl),
                         'name' => $this->replaceXmlEntities($simpleProduct->getName()),
                         'description' => $product->getData($this->_descriptionAttribute),
-                        'available' => $simpleProduct->getIsSalable(),
+                        'available' => $productAvailable,
                         'categories' => $lastCategoryId,
                         'group_id' => $groupId,
                         'params' => $params
@@ -766,7 +858,7 @@ class Feed
      */
     public function buildCategories()
     {
-        $categories = "<categories>";
+        $categories = "<categories>\n";
 
         foreach ($this->_categories as $category)
         {
@@ -779,7 +871,7 @@ class Feed
 
             $categories.= ">";
             $categories .= $category['name'];
-            $categories .= "</category>";
+            $categories .= "</category>\n";
         }
 
         $categories .= "</categories>";
@@ -787,9 +879,12 @@ class Feed
         return $categories;
     }
 
+    /**
+     * @return string
+     */
     public function buildProducts()
     {
-        $products = "<offers>";
+        $products = "<offers>\n";
 
         foreach ($this->_products as $product)
         {
@@ -797,7 +892,7 @@ class Feed
 
             if($product['group_id'])
             {
-                $products.= " groupId=\"{$product['group_id']}\"";
+                $products.= " group_id=\"{$product['group_id']}\"";
             }
 
             if($product['available'])
@@ -863,7 +958,7 @@ class Feed
                 $products .= "<vendor>{$product['vendor']}</vendor>";
             }
 
-            $products .= "</offer>";
+            $products .= "</offer>\n";
         }
 
         $products .= "</offers>";

@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /**
+ * @version 1.0.1
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus_RetailRocket
@@ -14,6 +15,7 @@
                 <description_attribute>description</description_attribute>
                 <model_attribute>0</model_attribute>
                 <vendor_attribute>0</vendor_attribute>
+                <always_subscribe_customer_email>1</always_subscribe_customer_email>
             </configuration>
         </retailrocket>
     </default>

@@ -9,6 +9,7 @@ use Improntus\RetailRocket\Helper\Data;
 /**
  * Class Tracker
  *
+ * @version 1.0.1
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block
@@ -126,5 +127,13 @@ class Tracker extends \Magento\Framework\View\Element\Template
     public function getPrivacyPoliciesUrl()
     {
         return $this->_helper->getPrivacyPoliciesUrl();
+    }
+
+    /**
+     * @return string
+     */
+    public function getAlwaysSubscribeCustomerEmail()
+    {
+        return $this->_helper->getAlwaysSubscribeCustomerEmail();
     }
 }

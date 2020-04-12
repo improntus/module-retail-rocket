@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /**
+ * @version 1.0.1
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus_RetailRocket
@@ -47,9 +48,23 @@
                     <comment>Extra attributes to use</comment>
                     <source_model>Improntus\RetailRocket\Model\Config\Source\ExtraAttributes</source_model>
                 </field>
+                <field id="always_subscribe_customer_email" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Always subscribe customer email in checkout success page</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>If not, the customer must click "I would like to receive exclussive offers." in checkout success page</comment>
+                </field>
                 <field id="privacy_policies_url" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Privacy policies URL</label>
                     <validate>required-entry</validate>
+                </field>
+                <field id="links" translate="label tooltip" type="button" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Click "Generate Retail Rocket Feed" button below. After the process is done every store you have in Magento will have one xml feed.</label>
+                    <frontend_model>Improntus\RetailRocket\Block\Adminhtml\Links</frontend_model>
+                </field>
+                <field id="generate" translate="label" type="button" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Generate Retail Rocket Feed Manually</label>
+                    <frontend_model>Improntus\RetailRocket\Block\Adminhtml\Button\Generate</frontend_model>
+                    <comment>Xml feed is generated automatically every 1 hour. You don't need generate it every time.</comment>
                 </field>
             </group>
         </section>

@@ -12,6 +12,7 @@ use Magento\Customer\Model\Customer;
 /**
  * Class NewsletterSubscriberNew
  *
+ * @version 1.0.1
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Observer
