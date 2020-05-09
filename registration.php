@@ -1,5 +1,5 @@
 <?php
-/** @version 1.0.1
+/** @version 1.0.2
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  */

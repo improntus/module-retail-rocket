@@ -4,6 +4,7 @@ namespace Improntus\RetailRocket\Block;
 
 use Improntus\RetailRocket\Helper\Data;
 use Magento\Catalog\Block\Category\View;
+use Magento\Catalog\Helper\Category as CategoryHelper;
 use Magento\Catalog\Model\Layer\Resolver;
 use Magento\Framework\Registry;
 use Magento\Framework\View\Element\Template\Context;
@@ -11,7 +12,7 @@ use Magento\Framework\View\Element\Template\Context;
 /**
  * Class Category
  *
- * @version 1.0.1
+ * @version 1.0.2
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block
@@ -28,14 +29,15 @@ class Category extends View
      * @param Context $context
      * @param Resolver $layerResolver
      * @param Registry $registry
-     * @param \Magento\Catalog\Helper\Category $categoryHelper
+     * @param CategoryHelper $categoryHelper
+     * @param Data $helper
      * @param array $data
      */
     public function __construct(
         Context $context,
         Resolver $layerResolver,
         Registry $registry,
-        \Magento\Catalog\Helper\Category $categoryHelper,
+        CategoryHelper $categoryHelper,
         Data $helper,
         array $data = []
     )

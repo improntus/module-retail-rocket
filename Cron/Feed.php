@@ -31,7 +31,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 /**
  * Class Feed
  *
- * @version 1.0.1
+ * @version 1.0.2
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
@@ -494,7 +494,7 @@ class Feed
             $specialPrice = $product->getData('special_price');
             $specialFromDate = $product->getData('special_from_date');
             $specialToDate = $product->getData('special_to_date');
-            $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+            $minimalPrice = (float)$product->getMinimalPrice();
 
             $groupId = null;
 
@@ -569,9 +569,24 @@ class Feed
                     $result[$i]['vendor'] = null;
                 }
 
+                /** Check if applies special price for configurable product */
+                $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+
+                if($applySpecial)
+                {
+                    $result[$i]['price'] = $specialPrice;
+                    $result[$i]['oldprice'] = $price;
+                }
+
+                if(!is_null($minimalPrice) && $minimalPrice < $price)
+                {
+                    $result[$i]['price'] = $minimalPrice;
+                    $result[$i]['oldprice'] = $price;
+                }
+
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.1) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.2) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
@@ -644,10 +659,13 @@ class Feed
                         $productAvailable = $simpleProduct->getIsSalable();
                     }
 
+                    $price = (float)$simpleProduct->getPrice();
+                    $finalPrice = (float)$simpleProduct->getFinalPrice();
+
                     $result[$i] = [
                         'id' => $simpleProduct->getId(),
                         'url' => $simpleProduct->getProductUrl(),
-                        'price' => (float)$simpleProduct->getFinalPrice(),
+                        'price' => $finalPrice,
                         'picture' => $this->getProductImageUrl($simpleProduct->getImage(),$mediaStoreUrl),
                         'name' => $this->replaceXmlEntities($simpleProduct->getName()),
                         'description' => $product->getData($this->_descriptionAttribute),
@@ -677,11 +695,20 @@ class Feed
                         $result[$i]['vendor'] = null;
                     }
 
-                    $applySpecial = $this->applySpecialPrice($simpleProduct->getPrice(),$simpleProduct->getSpecialPrice(),
+                    $applySpecial = $this->applySpecialPrice($price,$simpleProduct->getSpecialPrice(),
                         $simpleProduct->getSpecialFromDate(),$simpleProduct->getSpecialToDate());
 
                     if($applySpecial)
-                        $result[$i]['oldprice'] = $specialPrice;
+                    {
+                        $result[$i]['price'] = $specialPrice;
+                        $result[$i]['oldprice'] = $price;
+                    }
+
+                    if(!is_null($finalPrice) && $finalPrice < $price)
+                    {
+                        $result[$i]['price'] = $finalPrice;
+                        $result[$i]['oldprice'] = $price;
+                    }
                 }
 
                 continue;
@@ -736,8 +763,19 @@ class Feed
                     $result[$i]['vendor'] = null;
                 }
 
+                $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+
                 if($applySpecial)
-                    $result[$i]['oldprice'] = $specialPrice;
+                {
+                    $result[$i]['price'] = $specialPrice;
+                    $result[$i]['oldprice'] = $price;
+                }
+
+                if(!is_null($minimalPrice) && $minimalPrice < $price)
+                {
+                    $result[$i]['price'] = $minimalPrice;
+                    $result[$i]['oldprice'] = $price;
+                }
             }
 
             $i++;
