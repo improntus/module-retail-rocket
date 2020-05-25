@@ -20,18 +20,18 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
         {
             (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function()
             {
-                var email = "<?= $order->getCustomerEmail() ?>";
+                var email = "<?= $block->escapeHtml($order->getCustomerEmail()) ?>";
                 var userAdditional = {};
 
-                userAdditional.name = "<?= $order->getCustomerFirstname() ?>";
+                userAdditional.name = "<?= $block->escapeHtml($order->getCustomerFirstname()) ?>";
 
                 <?php if($order->getCustomerDob()): ?>
-                userAdditional.birthday = "<?= $block->getCustomerBirthdate($order->getCustomerDob()) ?>";
-                userAdditional.age = "<?= $block->getCustomerAge($order->getCustomerDob()) ?>";
+                userAdditional.birthday = "<?= $block->escapeHtml($block->getCustomerBirthdate($order->getCustomerDob())) ?>";
+                userAdditional.age = "<?= $block->escapeHtml($block->getCustomerAge($order->getCustomerDob())) ?>";
                 <?php endif; ?>
 
                 <?php if($order->getCustomerGender()): ?>
-                userAdditional.gender = "<?= $block->getCustomerGender($order->getCustomerGender()) ?>";
+                userAdditional.gender = "<?= $block->escapeHtml($block->getCustomerGender($order->getCustomerGender())) ?>";
                 <?php endif; ?>
 
                 try {
@@ -47,8 +47,8 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
 <?php else: ?>
     <div class="rr-email-confirmation" style="margin-top: 20px;text-align: left;overflow: hidden;padding: 20px 0">
         <input type="checkbox" id="rr_email" name="rr_email" value="1">
-        <label for="rr_email" style="font-weight: bold"><?= __('I would like to receive exclussive offers.')?></label>
-        <p style="font-size: 12px;padding-left: 20px;"><?= __('I have read and accept the <a href="%1">Privacy Policies</a>',$privacyPoliciesLink)?></p>
+        <label for="rr_email" style="font-weight: bold"><?= $block->escapeHtml(__('I would like to receive exclussive offers.'))?></label>
+        <p style="font-size: 12px;padding-left: 20px;"><?= $block->escapeHtml(__('I have read and accept the <a href="%1">Privacy Policies</a>',$privacyPoliciesLink))?></p>
     </div>
 
     <script type="text/javascript">
@@ -64,18 +64,18 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
                 {
                     (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function()
                     {
-                        var email = "<?= $order->getCustomerEmail() ?>";
+                        var email = "<?= $block->escapeHtml($order->getCustomerEmail()) ?>";
                         var userAdditional = {};
 
-                        userAdditional.name = "<?= $order->getCustomerFirstname() ?>";
+                        userAdditional.name = "<?= $block->escapeHtml($order->getCustomerFirstname()) ?>";
 
                         <?php if($order->getCustomerDob()): ?>
-                        userAdditional.birthday = "<?= $block->getCustomerBirthdate($order->getCustomerDob()) ?>";
-                        userAdditional.age = "<?= $block->getCustomerAge($order->getCustomerDob()) ?>";
+                        userAdditional.birthday = "<?= $block->escapeHtml($block->getCustomerBirthdate($order->getCustomerDob())) ?>";
+                        userAdditional.age = "<?= $block->escapeHtml($block->getCustomerAge($order->getCustomerDob())) ?>";
                         <?php endif; ?>
 
                         <?php if($order->getCustomerGender()): ?>
-                        userAdditional.gender = "<?= $block->getCustomerGender($order->getCustomerGender()) ?>";
+                        userAdditional.gender = "<?= $block->escapeHtml($block->getCustomerGender($order->getCustomerGender())) ?>";
                         <?php endif; ?>
 
                         try {

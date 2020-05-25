@@ -5,8 +5,8 @@
     <script type="text/javascript">
         (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
 
-            var email = "<?= $customerLogged['user_data']['email'] ?>";
-            var userAdditional = <?= json_encode($customerLogged['user_data']['additional'])?>;
+            var email = "<?= /* @noEscape */ $customerLogged['user_data']['email'] ?>";
+            var userAdditional = <?= /* @noEscape */ json_encode($customerLogged['user_data']['additional'])?>;
 
             try {
                 rrApi.setEmail(email, userAdditional);

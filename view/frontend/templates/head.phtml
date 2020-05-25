@@ -2,7 +2,7 @@
 
 <!-- BEGIN RETAIL ROCKET INTEGRATION -->
 <script type="text/javascript">
-    var rrPartnerId = "<?= $block->getPartnerId() ?>";
+    var rrPartnerId = "<?= $block->escapeHtml($block->getPartnerId())?>";
     var rrApi = {};
     var rrApiOnReady = rrApiOnReady || [];
     rrApi.addToBasket = rrApi.order = rrApi.categoryView = rrApi.view =

@@ -4,7 +4,7 @@
 <?php if($addToCart): ?>
     <script type="text/javascript">
         (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
-            try { rrApi.addToBasket(<?= $addToCart ?>) } catch(e) {}
+            try { rrApi.addToBasket(<?= /* @noEscape */ $addToCart ?>) } catch(e) {}
         })
     </script>
 <?php endif ?>

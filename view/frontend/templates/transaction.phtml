@@ -27,8 +27,8 @@ foreach ($order->getAllVisibleItems() as $allVisibleItem)
         (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
             try {
                 rrApi.order({
-                    "transaction": "<?= $order->getIncrementId()?>",
-                    "items": <?= json_encode($orderItems) ?>
+                    "transaction": "<?= /* @noEscape */ $order->getIncrementId()?>",
+                    "items": <?= /* @noEscape */ json_encode($orderItems) ?>
             });
             } catch(e) {}
         })
