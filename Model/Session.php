@@ -46,6 +46,29 @@ class Session extends SessionManager
      * @param $data
      * @return $this
      */
+    public function setStockId($data)
+    {
+        $this->setData('stock_id', $data);
+        return $this;
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getStockId()
+    {
+        if ($this->hasAddToCart()) {
+            $data = $this->getData('stock_id');
+            $this->unsetData('stock_id');
+            return $data;
+        }
+        return null;
+    }
+
+    /**
+     * @param $data
+     * @return $this
+     */
     public function setCustomerLogged($data)
     {
         $this->setData('customer_logged_in', $data);

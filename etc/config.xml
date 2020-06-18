@@ -16,6 +16,7 @@
                 <model_attribute>0</model_attribute>
                 <vendor_attribute>0</vendor_attribute>
                 <always_subscribe_customer_email>1</always_subscribe_customer_email>
+                <enable_single_feed>1</enable_single_feed>
             </configuration>
         </retailrocket>
     </default>

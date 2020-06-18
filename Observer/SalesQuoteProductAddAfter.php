@@ -75,6 +75,13 @@ class SalesQuoteProductAddAfter implements ObserverInterface
             $productId = $item->getProduct()->getId();
 		}
 
+        $this->_retailRocketSession->setStockId(false);
+
+		if($this->_retailRocketHelper->isStockIdEnabled())
+		{
+            $this->_retailRocketSession->setStockId($this->_retailRocketHelper->getCurrentWebsiteCode());
+        }
+
 		$this->_retailRocketSession->setAddToCart($productId);
 
 		return $this;

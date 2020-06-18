@@ -2,9 +2,11 @@
 
 namespace Improntus\RetailRocket\Block;
 
+use Improntus\RetailRocket\Model\Session;
 use Magento\Customer\Model\Customer;
 use Magento\Framework\View\Element\Template;
 use Improntus\RetailRocket\Helper\Data;
+use Magento\Sales\Model\Order;
 
 /**
  * Class Tracker
@@ -14,10 +16,10 @@ use Improntus\RetailRocket\Helper\Data;
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block
  */
-class Tracker extends \Magento\Framework\View\Element\Template
+class Tracker extends Template
 {
     /**
-     * @var \Improntus\RetailRocket\Helper\Data
+     * @var Data
      */
 	protected $_helper;
 
@@ -55,7 +57,7 @@ class Tracker extends \Magento\Framework\View\Element\Template
     }
 
     /**
-     * @return \Magento\Sales\Model\Order
+     * @return Order
      */
     public function getOrder()
     {
@@ -71,8 +73,25 @@ class Tracker extends \Magento\Framework\View\Element\Template
     }
 
     /**
+     * @return string|null
+     */
+    public function getStockId()
+    {
+        return $this->_helper->getSession()->getStockId();
+    }
+
+    /**
      * @param $value
-     * @return \Improntus\RetailRocket\Model\Session
+     * @return Session
+     */
+    public function setStockId($value)
+    {
+        return $this->_helper->getSession()->setAddToCart($value);
+    }
+
+    /**
+     * @param $value
+     * @return Session
      */
     public function setAddToCart($value)
     {

@@ -1,10 +1,11 @@
 <?php /** @var Improntus\RetailRocket\Block\Tracker $block */ ?>
 <?php $addToCart = $block->getAddToCart() ?>
+<?php $stockId = $block->getStockId() ?>
 
 <?php if($addToCart): ?>
     <script type="text/javascript">
         (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
-            try { rrApi.addToBasket(<?= /* @noEscape */ $addToCart ?>) } catch(e) {}
+            try { rrApi.addToBasket(<?= /* @noEscape */ $addToCart ?><?php if($stockId):?>, {'stockId': '<?= /* @noEscape */ $stockId ?>'}<?php endif; ?>) } catch(e) {}
         })
     </script>
 <?php endif ?>

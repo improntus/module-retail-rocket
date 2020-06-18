@@ -18,10 +18,17 @@ define([
 
                         if ("undefined" !== typeof eventData.eventAdditional && eventData.eventAdditional)
                         {
-                            var productId = eventData.eventAdditional;
+                            var productId = eventData.eventAdditional.productId;
+                            var stockId = eventData.eventAdditional.stockId;
 
                             try {
-                                rrApi.addToBasket(productId)
+                                if(stockId)
+                                {
+                                    rrApi.addToBasket(productId,{'stockId': stockId})
+                                }
+                                else{
+                                    rrApi.addToBasket(productId)
+                                }
                             } catch(e) {}
                         }
                     }

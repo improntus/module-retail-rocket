@@ -133,6 +133,11 @@ class NewsletterSubscriberNew implements ObserverInterface
             }
         }
 
+        if($this->_retailRocketHelper->isStockIdEnabled())
+        {
+            $result['additional']['stockId'] = $this->_retailRocketHelper->getCurrentWebsiteCode();
+        }
+
         return $result;
     }
 

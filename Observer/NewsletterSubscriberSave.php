@@ -3,9 +3,11 @@
 namespace Improntus\RetailRocket\Observer;
 
 use Improntus\RetailRocket\Helper\Data;
+use Magento\Customer\Model\Session;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Customer\Model\Customer;
 
@@ -41,7 +43,7 @@ class NewsletterSubscriberSave implements ObserverInterface
 	protected $_storeManager;
 
     /**
-     * @var \Magento\Customer\Model\Session
+     * @var Session
      */
 	protected $_customerSession;
 
@@ -51,15 +53,14 @@ class NewsletterSubscriberSave implements ObserverInterface
      * @param Data $helper
      * @param CustomerRepositoryInterface $customerRepository
      * @param StoreManagerInterface $storeManager
-     * @param \Magento\Customer\Model\Session $customerSession
+     * @param Session $customerSession
      */
 	public function __construct(
 		\Improntus\RetailRocket\Model\Session $retailRocketSession,
 		Data $helper,
         CustomerRepositoryInterface $customerRepository,
         StoreManagerInterface $storeManager,
-        \Magento\Customer\Model\Session $customerSession,
-        Customer $customer
+        Session $customerSession
 	) {
 		$this->_retailRocketSession = $retailRocketSession;
 		$this->_retailRocketHelper = $helper;
@@ -71,7 +72,7 @@ class NewsletterSubscriberSave implements ObserverInterface
     /**
      * @param Observer $observer
      * @return $this|void
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
 	public function execute(Observer $observer)
     {
@@ -127,6 +128,11 @@ class NewsletterSubscriberSave implements ObserverInterface
         if($customer->getGender())
         {
             $result['additional']['gender'] = $customer->getAttribute('gender')->getSource()->getOptionText($customer->getData('gender'));
+        }
+
+        if($this->_retailRocketHelper->isStockIdEnabled())
+        {
+            $result['additional']['stockId'] = $this->_retailRocketHelper->getCurrentWebsiteCode();
         }
 
         return $result;

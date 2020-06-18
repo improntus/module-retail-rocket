@@ -55,15 +55,32 @@ class Product extends Tracker
         {
             $productIds = implode(',',$productInfo['product_ids']);
 
-            $html = <<<HTML
-    <!-- Begin RetailRocket ProductView Event -->
-    <script type="text/javascript">
-                (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
-            try{ rrApi.groupView([$productIds]); } catch(e) {}
-        })
-    </script>
-    <!-- End RetailRocket ProductView Event -->
+            if($this->_helper->isStockIdEnabled())
+            {
+                $websiteCodeStockId = $this->_helper->getCurrentWebsiteCode();
+
+                    $html = <<<HTML
+<!-- Begin RetailRocket ProductView StockId Event -->
+<script type="text/javascript">
+    (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
+        try{ rrApi.groupView([$productIds],{stockId: "{$websiteCodeStockId}"}); } catch(e) {}
+    })
+</script>
+<!-- End RetailRocket ProductView Event -->
 HTML;
+            }
+            else
+            {
+                $html = <<<HTML
+<!-- Begin RetailRocket ProductView Event -->
+<script type="text/javascript">
+    (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
+        try{ rrApi.groupView([$productIds]); } catch(e) {}
+    })
+</script>
+<!-- End RetailRocket ProductView Event -->
+HTML;
+            }
         }
 
         return $html;

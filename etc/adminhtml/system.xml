@@ -57,11 +57,28 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>If not, the customer must click "I would like to receive exclussive offers." in checkout success page</comment>
                 </field>
-                <field id="links" translate="label tooltip" type="button" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enable_single_feed" translate="label" type="select" sortOrder="38" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Single XML Feed (only by group id)</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <group id="stockid" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Stock Id Mode</label>
+                    <field id="enable" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Enable StockId Mode</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <comment>If enabled, "stock_id" will be included with each store in a single xml feed</comment>
+                    </field>
+                    <field id="root_category_ids" translate="label" type="multiselect" sortOrder="15" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Root category</label>
+                        <source_model>Improntus\RetailRocket\Model\Config\Source\RootCategoryId</source_model>
+                        <comment>Select all root categories you want to use in feed</comment>
+                    </field>
+                </group>
+                <field id="links" translate="label tooltip" type="button" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Click "Generate Retail Rocket Feed" button below. After the process is done every store you have in Magento will have one xml feed.</label>
                     <frontend_model>Improntus\RetailRocket\Block\Adminhtml\Links</frontend_model>
                 </field>
-                <field id="generate" translate="label" type="button" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="generate" translate="label" type="button" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Generate Retail Rocket Feed Manually</label>
                     <frontend_model>Improntus\RetailRocket\Block\Adminhtml\Button\Generate</frontend_model>
                     <comment>Xml feed is generated automatically every 1 hour. You don't need generate it every time.</comment>

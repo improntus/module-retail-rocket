@@ -21,7 +21,7 @@ class Fpc implements SectionSourceInterface
     /**
      * @var Data
      */
-    protected $_helper;
+    protected $_retailRocketHelper;
 
     /**
      * @var UrlInterface
@@ -53,7 +53,7 @@ class Fpc implements SectionSourceInterface
     ) {
         $this->_urlBuilder = $urlBuilder;
         $this->_customerSession = $customerSession;
-        $this->_helper = $helper;
+        $this->_retailRocketHelper = $helper;
         $this->_currentCustomer = $currentCustomer;
     }
 
@@ -68,13 +68,16 @@ class Fpc implements SectionSourceInterface
             'events' => []
         ];
 
-        if ($this->_helper->getSession()->hasAddToCart())
+        if ($this->_retailRocketHelper->getSession()->hasAddToCart())
         {
             // Get the add-to-cart information since it's unique to the user
             // but might be displayed on a cached page
             $data['events'][] = [
                 'eventName' => 'AddToCart',
-                'eventAdditional' => $this->_helper->getSession()->getAddToCart()
+                'eventAdditional' => [
+                    'productId' => $this->_retailRocketHelper->getSession()->getAddToCart(),
+                    'stockId' => $this->_retailRocketHelper->isStockIdEnabled() ? $this->_retailRocketHelper->getCurrentWebsiteCode() : null
+                ],
             ];
         }
         return $data;

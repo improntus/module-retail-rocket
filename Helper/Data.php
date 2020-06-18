@@ -6,12 +6,14 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Improntus\RetailRocket\Model\Session;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Filesystem;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class Data
@@ -49,25 +51,33 @@ class Data extends AbstractHelper
     protected $_storeManager;
 
     /**
+     * @var LoggerInterface
+     */
+    protected $_logger;
+
+    /**
      * Data constructor.
      * @param Context $context
      * @param Session $session
      * @param CheckoutSession $checkoutSession
      * @param Filesystem $filesystem
      * @param StoreManagerInterface $storeManager
+     * @param LoggerInterface $logger
      */
     public function __construct(
         Context $context,
         Session $session,
         CheckoutSession $checkoutSession,
         Filesystem $filesystem,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        LoggerInterface $logger
     )
     {
         $this->_retailRocketSession = $session;
         $this->_checkoutSession = $checkoutSession;
         $this->_fileSystem = $filesystem;
         $this->_storeManager = $storeManager;
+        $this->_logger = $logger;
 
         parent::__construct($context);
     }
@@ -78,6 +88,22 @@ class Data extends AbstractHelper
     public function isModuleEnabled()
     {
         return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/enabled', ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSingleXmlFeedEnabled()
+    {
+        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/enable_single_feed');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStockIdEnabled()
+    {
+        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/stockid/enable');
     }
 
     /**
@@ -134,6 +160,14 @@ class Data extends AbstractHelper
     public function getAlwaysSubscribeCustomerEmail()
     {
         return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/always_subscribe_customer_email', ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
+     * @return array
+     */
+    public function getStockIdCategoriesIds()
+    {
+        return explode(',',$this->scopeConfig->getValue('retailrocket/configuration/stockid/root_category_ids'));
     }
 
     /**
@@ -208,5 +242,22 @@ class Data extends AbstractHelper
         }
 
         return $this->_order;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCurrentWebsiteCode()
+    {
+        try{
+            $websiteCode = $this->_storeManager->getWebsite()->getCode();
+
+            return $websiteCode;
+        }
+        catch (LocalizedException $exception)
+        {
+            $this->_logger->error($exception);
+            return null;
+        }
     }
 }
