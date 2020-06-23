@@ -29,7 +29,7 @@ define([
                                 else{
                                     rrApi.addToBasket(productId)
                                 }
-                            } catch(e) {}
+                            } catch(e) {console.log(e)}
                         }
                     }
                     customerData.set('improntus-retailrocket-fpc', {});

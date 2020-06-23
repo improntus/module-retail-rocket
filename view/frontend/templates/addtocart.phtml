@@ -5,9 +5,7 @@
 <?php if($addToCart): ?>
     <script type="text/javascript">
         (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
-            try { rrApi.addToBasket(<?= /* @noEscape */ $addToCart ?><?php if($stockId):?>, {'stockId': '<?= /* @noEscape */ $stockId ?>'}<?php endif; ?>) } catch(e) {}
+            try { rrApi.addToBasket(<?= /* @noEscape */ $addToCart ?><?php if($stockId):?>, {'stockId': '<?= /* @noEscape */ $stockId ?>'}<?php endif; ?>) } catch(e) {console.log(e)}
         })
     </script>
 <?php endif ?>
-
-

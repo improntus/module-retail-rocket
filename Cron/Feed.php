@@ -31,7 +31,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 /**
  * Class Feed
  *
- * @version 1.0.3
+ * @version 1.0.4
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
@@ -294,16 +294,26 @@ class Feed
 
         $productsByWebsite = [];
 
+        $allProducts = $this->getProductCollection(null,true);
+
         foreach ($websites as $_website)
         {
             $productsByWebsite[$_website->getCode()] = [];
             $productsByWebsite[$_website->getCode()]['products'] = $this->getProductCollection($_website->getId(),true);
-//            $productsByWebsite[$_website->getCode()]['media_url'] = $_website->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
         }
 
-        $this->_products = $this->getProductsWithStockId($productsByWebsite);
-        $asdas = 33;
+        $productByIds = [];
+        foreach ($productsByWebsite as $websiteCode => $products)
+        {
+            foreach ($products['products'] as $product)
+            {
+                $productByIds[$product->getId()][$websiteCode] = $product;
+            }
+        }
 
+
+        $this->_products = $this->getProductsWithStockId($allProducts, $productByIds);
+        $this->saveToFile('stockid',true);
     }
 
     /**
@@ -357,7 +367,9 @@ class Feed
 
         if($allAttributes)
         {
-            $collection->addAttributeToSelect('*');
+            $collection->addAttributeToSelect('*')
+                ->addUrlRewrite()
+                ->addPriceData(null,null);
         }
         else
         {
@@ -603,7 +615,7 @@ class Feed
                     'url' => $product->getProductUrl(),
                     'price' => (float)$finalPrice,
                     'picture' => $productImage,
-                    'name' => $this->replaceXmlEntities($product->getName()),
+                    'name' => $product->getName(),
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
                     'categories' => $lastCategoryId,
@@ -648,7 +660,7 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.3) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.4) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
@@ -729,7 +741,7 @@ class Feed
                         'url' => $simpleProduct->getProductUrl(),
                         'price' => $finalPrice,
                         'picture' => $this->getProductImageUrl($simpleProduct->getImage(),$mediaStoreUrl),
-                        'name' => $this->replaceXmlEntities($simpleProduct->getName()),
+                        'name' => $simpleProduct->getName(),
                         'description' => $product->getData($this->_descriptionAttribute),
                         'available' => $productAvailable,
                         'categories' => $lastCategoryId,
@@ -797,7 +809,7 @@ class Feed
                     'url' => $product->getProductUrl(),
                     'price' => $finalPrice,
                     'picture' => $productImage,
-                    'name' => $this->replaceXmlEntities($product->getName()),
+                    'name' => $product->getName(),
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
                     'categories' => $lastCategoryId,
@@ -850,187 +862,99 @@ class Feed
     }
 
     /**
-     * @param array $productsByWebsite
+     * @param $allProducts
+     * @param $productByIds
      * @return array
      */
-    public function getProductsWithStockId($productsByWebsite)
+    public function getProductsWithStockId($allProducts, $productByIds)
     {
         $result = [];
 
-        //PONER QUE PROD VAN
+        $collection = $allProducts;
 
-        foreach ($productsByWebsite as $websiteId => $collection)
+        $i = 0;
+        $notVisibleProductsParents = [];
+
+        foreach ($collection as $product)
         {
-            $i = 0;
-            $notVisibleProductsParents = [];
-            $products = $collection['products'];
-
-            foreach ($products as $product)
+            if($product->getVisibility() == Visibility::VISIBILITY_NOT_VISIBLE)
             {
-                if($product->getVisibility() == Visibility::VISIBILITY_NOT_VISIBLE)
+                $parentProduct = $this->_configurable->getParentIdsByChild($product->getId());
+
+                if(count($parentProduct))
                 {
-                    $parentProduct = $this->_configurable->getParentIdsByChild($product->getId());
+                    $parent = array_pop($parentProduct);
 
-                    if(count($parentProduct))
+                    if(!isset($notVisibleProductsParents[$parent]))
                     {
-                        $parent = array_pop($parentProduct);
-
-                        if(!isset($notVisibleProductsParents[$parent]))
-                        {
-                            $notVisibleProductsParents[$parent] = [];
-                        }
-
-                        $notVisibleProductsParents[$parent][] = $product->getId();
+                        $notVisibleProductsParents[$parent] = [];
                     }
 
-                    continue;
+                    $notVisibleProductsParents[$parent][] = $product->getId();
                 }
 
-                if($product->getTypeId() == Grouped::TYPE_CODE)
+                continue;
+            }
+
+            if($product->getTypeId() == Grouped::TYPE_CODE)
+            {
+                $params = [];
+
+                if(count($this->_extraAttributes))
                 {
-                    $params = [];
-
-                    if(count($this->_extraAttributes))
+                    foreach ($this->_extraAttributes as $extraAttribute => $type)
                     {
-                        foreach ($this->_extraAttributes as $extraAttribute => $type)
-                        {
-                            $params[] = [
-                                'code' => $extraAttribute,
-                                'label' => $this->getAttributeValue($product,$extraAttribute,$type)
-                            ];
-                        }
-                    }
-
-                    $categoryIds = $product->getCategoryIds();
-                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
-
-                    $result[$i] = [
-                        'id' => $product->getId(),
-                        'url' => $product->getProductUrl(),
-                        'price' => (float)$product->getMinimalPrice(),
-                        'picture' => $this->getProductImageUrl($product->getImage(),$product->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
-                        'name' => $this->replaceXmlEntities($product->getName()),
-                        'description' => $this->replaceXmlEntities($product->getData($this->_descriptionAttribute)),
-                        'available' => $product->getIsSalable(),
-                        'categories' => $lastCategoryId,
-                        'group_id' => null,
-                        'params' => $params
-                    ];
-
-                    $groupId = $product->getId();
-
-                    if(count($this->_modelAttribute))
-                    {
-                        $key = key($this->_modelAttribute);
-                        $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
-                    }
-                    else
-                    {
-                        $result[$i]['model'] = null;
-                    }
-
-                    if(count($this->_vendorAttribute))
-                    {
-                        $key = key($this->_vendorAttribute);
-                        $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
-                    }
-                    else
-                    {
-                        $result[$i]['vendor'] = null;
-                    }
-
-                    $childProducts = $product->getTypeInstance()->getAssociatedProducts($product);
-
-                    foreach ($childProducts as $childProduct)
-                    {
-                        $i++;
-
-                        $params = [];
-
-                        if(count($this->_extraAttributes))
-                        {
-                            foreach ($this->_extraAttributes as $extraAttribute => $type)
-                            {
-                                $params[] = [
-                                    'code' => $extraAttribute,
-                                    'label' => $this->getAttributeValue($childProduct,$extraAttribute,$type)
-                                ];
-                            }
-                        }
-
-                        $categoryIds = $childProduct->getCategoryIds();
-                        $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
-
-                        $result[$i] = [
-                            'id' => $childProduct->getId(),
-                            'url' => $childProduct->getProductUrl(),
-                            'price' => (float)$childProduct->getPrice(),
-                            'picture' => $this->getProductImageUrl($childProduct->getImage(),$childProduct->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
-                            'name' => $this->replaceXmlEntities($childProduct->getName()),
-                            'description' => $this->replaceXmlEntities($childProduct->getData($this->_descriptionAttribute)),
-                            'available' => $childProduct->getIsSalable(),
-                            'categories' => $lastCategoryId,
-                            'group_id' => $groupId,
-                            'params' => $params
+                        $params[] = [
+                            'code' => $extraAttribute,
+                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
                         ];
-
-                        if(count($this->_modelAttribute))
-                        {
-                            $key = key($this->_modelAttribute);
-                            $result[$i]['model'] = $this->getAttributeValue($childProduct,$key,$this->_modelAttribute[$key]);
-                        }
-                        else
-                        {
-                            $result[$i]['model'] = null;
-                        }
-
-                        if(count($this->_vendorAttribute))
-                        {
-                            $key = key($this->_vendorAttribute);
-                            $result[$i]['vendor'] = $this->getAttributeValue($childProduct,$key,$this->_vendorAttribute[$key]);
-                        }
-                        else
-                        {
-                            $result[$i]['vendor'] = null;
-                        }
                     }
+                }
 
+                $categoryIds = $product->getCategoryIds();
+                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
+                $result[$i] = [
+                    'id' => $product->getId(),
+                    'url' => $product->getProductUrl(),
+                    'price' => (float)$product->getMinimalPrice(),
+                    'picture' => $this->getProductImageUrl($product->getImage(),$product->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
+                    'name' => $product->getName(),
+                    'description' => $product->getData($this->_descriptionAttribute),
+                    'available' => false,
+                    'categories' => $lastCategoryId,
+                    'group_id' => null,
+                    'params' => $params
+                ];
+
+                $groupId = $product->getId();
+
+                if(count($this->_modelAttribute))
+                {
+                    $key = key($this->_modelAttribute);
+                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['model'] = null;
+                }
+
+                if(count($this->_vendorAttribute))
+                {
+                    $key = key($this->_vendorAttribute);
+                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['vendor'] = null;
+                }
+
+                $childProducts = $product->getTypeInstance()->getAssociatedProducts($product);
+
+                foreach ($childProducts as $childProduct)
+                {
                     $i++;
 
-                    continue;
-                }
-
-                $price = (float)$product->getData('price');
-                $finalPrice = (float)$product->getData('final_price');
-                $specialPrice = $product->getData('special_price');
-                $specialFromDate = $product->getData('special_from_date');
-                $specialToDate = $product->getData('special_to_date');
-                $minimalPrice = (float)$product->getMinimalPrice();
-
-                $groupId = null;
-
-                if($finalPrice == 0)
-                {
-                    continue;
-                }
-
-                $productImage = $this->getProductImageUrl($product->getImage(),$product->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA));
-
-                if($product->getTypeId() == Configurable::TYPE_CODE)
-                {
-                    $groupId = $product->getId();
-
-                    $configurableAttributes = $product->getTypeInstance()->getConfigurableOptions($product);
-                    $options = [];
-
-                    foreach($configurableAttributes as $attr)
-                    {
-                        foreach($attr as $p)
-                        {
-                            $options[$p['sku']][$p['attribute_code']] = $p['option_title'];
-                        }
-                    }
-
                     $params = [];
 
                     if(count($this->_extraAttributes))
@@ -1039,216 +963,22 @@ class Feed
                         {
                             $params[] = [
                                 'code' => $extraAttribute,
-                                'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                                'label' => $this->getAttributeValue($childProduct,$extraAttribute,$type)
                             ];
                         }
                     }
 
-                    $categoryIds = $product->getCategoryIds();
+                    $categoryIds = $childProduct->getCategoryIds();
                     $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
 
                     $result[$i] = [
-                        'id' => $product->getId(),
-                        'url' => $product->getProductUrl(),
-                        'price' => (float)$finalPrice,
-                        'picture' => $productImage,
-                        'name' => $this->replaceXmlEntities($product->getName()),
-                        'description' => $product->getData($this->_descriptionAttribute),
-                        'available' => $product->getIsSalable(),
-                        'categories' => $lastCategoryId,
-                        'group_id' => null,
-                        'params' => $params
-                    ];
-
-                    if(count($this->_modelAttribute))
-                    {
-                        $key = key($this->_modelAttribute);
-                        $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
-                    }
-                    else
-                    {
-                        $result[$i]['model'] = null;
-                    }
-
-                    if(count($this->_vendorAttribute))
-                    {
-                        $key = key($this->_vendorAttribute);
-                        $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
-                    }
-                    else
-                    {
-                        $result[$i]['vendor'] = null;
-                    }
-
-                    /** Check if applies special price for configurable product */
-                    $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
-
-                    if($applySpecial)
-                    {
-                        $result[$i]['price'] = $specialPrice;
-                        $result[$i]['oldprice'] = $price;
-                    }
-
-                    if(!is_null($minimalPrice) && $minimalPrice < $price)
-                    {
-                        $result[$i]['price'] = $minimalPrice;
-                        $result[$i]['oldprice'] = $price;
-                    }
-
-                    $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
-
-                    /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.3) */
-                    if(isset($notVisibleProductsParents[$product->getId()]))
-                    {
-                        if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
-                        {
-                            $simpleIdsFromObject = [];
-
-                            foreach ($simpleProducts as $simpleProduct)
-                            {
-                                $simpleIdsFromObject[] = $simpleProduct->getId();
-                            }
-
-                            $diff = array_diff($notVisibleProductsParents[$product->getId()],$simpleIdsFromObject);
-
-                            if(count($diff))
-                            {
-                                foreach ($diff as $_productId)
-                                {
-                                    try{
-                                        $productToAdd = $this->_productRepository->getById($_productId);
-                                        $simpleProducts[] = $productToAdd;
-                                    }
-                                    catch (Exception $e){
-                                        $this->logger->error($e->getMessage());
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    foreach ($simpleProducts as $simpleProduct)
-                    {
-                        $i++;
-                        $params = [];
-
-                        if(isset($options[$simpleProduct->getSku()]))
-                        {
-                            foreach ($options[$simpleProduct->getSku()] as $code => $label)
-                            {
-                                $params[] = [
-                                    'code' => $code,
-                                    'label' => $label
-                                ];
-                            }
-                        }
-
-                        if(count($this->_extraAttributes))
-                        {
-                            foreach ($this->_extraAttributes as $extraAttribute => $type)
-                            {
-                                $params[] = [
-                                    'code' => $extraAttribute,
-                                    'label' => $this->getAttributeValue($simpleProduct,$extraAttribute,$type)
-                                ];
-                            }
-                        }
-
-                        $categoryIds = $simpleProduct->getCategoryIds();
-                        $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
-
-                        if($simpleProduct->getTypeId() == Type::TYPE_SIMPLE)
-                        {
-                            $stockItem = $this->_stockRegistry->getStockItem(
-                                $simpleProduct->getId()
-                            );
-
-                            $productAvailable = $simpleProduct->getStatus() == Status::STATUS_ENABLED
-                                && $stockItem->getQty() > 0 && $stockItem->getIsInStock();
-                        }
-                        else{
-                            $productAvailable = $simpleProduct->getIsSalable();
-                        }
-
-                        $price = (float)$simpleProduct->getPrice();
-                        $finalPrice = (float)$simpleProduct->getFinalPrice();
-
-                        $result[$i] = [
-                            'id' => $simpleProduct->getId(),
-                            'url' => $simpleProduct->getProductUrl(),
-                            'price' => $finalPrice,
-                            'picture' => $this->getProductImageUrl($simpleProduct->getImage(),$simpleProduct->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
-                            'name' => $this->replaceXmlEntities($simpleProduct->getName()),
-                            'description' => $product->getData($this->_descriptionAttribute),
-                            'available' => $productAvailable,
-                            'categories' => $lastCategoryId,
-                            'group_id' => $groupId,
-                            'params' => $params
-                        ];
-
-                        if(count($this->_modelAttribute))
-                        {
-                            $key = key($this->_modelAttribute);
-                            $result[$i]['model'] = $this->getAttributeValue($simpleProduct,$key,$this->_modelAttribute[$key]);
-                        }
-                        else
-                        {
-                            $result[$i]['model'] = null;
-                        }
-
-                        if(count($this->_vendorAttribute))
-                        {
-                            $key = key($this->_vendorAttribute);
-                            $result[$i]['vendor'] = $this->getAttributeValue($simpleProduct,$key,$this->_vendorAttribute[$key]);
-                        }
-                        else
-                        {
-                            $result[$i]['vendor'] = null;
-                        }
-
-                        $applySpecial = $this->applySpecialPrice($price,$simpleProduct->getSpecialPrice(),
-                            $simpleProduct->getSpecialFromDate(),$simpleProduct->getSpecialToDate());
-
-                        if($applySpecial)
-                        {
-                            $result[$i]['price'] = $specialPrice;
-                            $result[$i]['oldprice'] = $price;
-                        }
-
-                        if(!is_null($finalPrice) && $finalPrice < $price)
-                        {
-                            $result[$i]['price'] = $finalPrice;
-                            $result[$i]['oldprice'] = $price;
-                        }
-                    }
-
-                    continue;
-                }
-                else{
-                    $params = [];
-
-                    if(count($this->_extraAttributes))
-                    {
-                        foreach ($this->_extraAttributes as $extraAttribute => $type)
-                        {
-                            $params[] = [
-                                'code' => $extraAttribute,
-                                'label' => $this->getAttributeValue($product,$extraAttribute,$type)
-                            ];
-                        }
-                    }
-
-                    $categoryIds = $product->getCategoryIds();
-                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
-
-                    $result[$i] = [
-                        'id' => $product->getId(),
-                        'url' => $product->getProductUrl(),
-                        'price' => $finalPrice,
-                        'picture' => $productImage,
-                        'name' => $this->replaceXmlEntities($product->getName()),
-                        'description' => $product->getData($this->_descriptionAttribute),
-                        'available' => $product->getIsSalable(),
+                        'id' => $childProduct->getId(),
+                        'url' => $childProduct->getProductUrl(),
+                        'price' => (float)$childProduct->getPrice(),
+                        'picture' => $this->getProductImageUrl($childProduct->getImage(),$childProduct->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
+                        'name' => $childProduct->getName(),
+                        'description' => $childProduct->getData($this->_descriptionAttribute),
+                        'available' => false,
                         'categories' => $lastCategoryId,
                         'group_id' => $groupId,
                         'params' => $params
@@ -1257,7 +987,7 @@ class Feed
                     if(count($this->_modelAttribute))
                     {
                         $key = key($this->_modelAttribute);
-                        $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                        $result[$i]['model'] = $this->getAttributeValue($childProduct,$key,$this->_modelAttribute[$key]);
                     }
                     else
                     {
@@ -1267,14 +997,214 @@ class Feed
                     if(count($this->_vendorAttribute))
                     {
                         $key = key($this->_vendorAttribute);
-                        $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                        $result[$i]['vendor'] = $this->getAttributeValue($childProduct,$key,$this->_vendorAttribute[$key]);
+                    }
+                    else
+                    {
+                        $result[$i]['vendor'] = null;
+                    }
+                }
+
+                $i++;
+
+                continue;
+            }
+
+            $price = (float)$product->getData('price');
+            $finalPrice = (float)$product->getData('final_price');
+            $specialPrice = $product->getData('special_price');
+            $specialFromDate = $product->getData('special_from_date');
+            $specialToDate = $product->getData('special_to_date');
+            $minimalPrice = (float)$product->getMinimalPrice();
+
+            $groupId = null;
+
+            if($finalPrice == 0)
+            {
+                continue;
+            }
+
+            $productImage = $this->getProductImageUrl($product->getImage(),$product->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA));
+
+            if($product->getTypeId() == Configurable::TYPE_CODE)
+            {
+                $groupId = $product->getId();
+
+                $configurableAttributes = $product->getTypeInstance()->getConfigurableOptions($product);
+                $options = [];
+
+                foreach($configurableAttributes as $attr)
+                {
+                    foreach($attr as $p)
+                    {
+                        $options[$p['sku']][$p['attribute_code']] = $p['option_title'];
+                    }
+                }
+
+                $params = [];
+
+                if(count($this->_extraAttributes))
+                {
+                    foreach ($this->_extraAttributes as $extraAttribute => $type)
+                    {
+                        $params[] = [
+                            'code' => $extraAttribute,
+                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                        ];
+                    }
+                }
+
+                $categoryIds = $product->getCategoryIds();
+                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
+                $result[$i] = [
+                    'id' => $product->getId(),
+                    'url' => $product->getProductUrl(),
+                    'price' => (float)$finalPrice,
+                    'picture' => $productImage,
+                    'name' => $product->getName(),
+                    'description' => $product->getData($this->_descriptionAttribute),
+                    'available' => false,
+                    'categories' => $lastCategoryId,
+                    'group_id' => null,
+                    'params' => $params
+                ];
+
+                if(count($this->_modelAttribute))
+                {
+                    $key = key($this->_modelAttribute);
+                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['model'] = null;
+                }
+
+                if(count($this->_vendorAttribute))
+                {
+                    $key = key($this->_vendorAttribute);
+                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['vendor'] = null;
+                }
+
+                /** Check if applies special price for configurable product */
+                $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+
+                if($applySpecial)
+                {
+                    $result[$i]['price'] = $specialPrice;
+                    $result[$i]['oldprice'] = $price;
+                }
+
+                if(!is_null($minimalPrice) && $minimalPrice < $price)
+                {
+                    $result[$i]['price'] = $minimalPrice;
+                    $result[$i]['oldprice'] = $price;
+                }
+
+                $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
+
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.4) */
+                if(isset($notVisibleProductsParents[$product->getId()]))
+                {
+                    if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
+                    {
+                        $simpleIdsFromObject = [];
+
+                        foreach ($simpleProducts as $simpleProduct)
+                        {
+                            $simpleIdsFromObject[] = $simpleProduct->getId();
+                        }
+
+                        $diff = array_diff($notVisibleProductsParents[$product->getId()],$simpleIdsFromObject);
+
+                        if(count($diff))
+                        {
+                            foreach ($diff as $_productId)
+                            {
+                                try{
+                                    $productToAdd = $this->_productRepository->getById($_productId);
+                                    $simpleProducts[] = $productToAdd;
+                                }
+                                catch (Exception $e){
+                                    $this->logger->error($e->getMessage());
+                                }
+                            }
+                        }
+                    }
+                }
+
+                foreach ($simpleProducts as $simpleProduct)
+                {
+                    $i++;
+                    $params = [];
+
+                    if(isset($options[$simpleProduct->getSku()]))
+                    {
+                        foreach ($options[$simpleProduct->getSku()] as $code => $label)
+                        {
+                            $params[] = [
+                                'code' => $code,
+                                'label' => $label
+                            ];
+                        }
+                    }
+
+                    if(count($this->_extraAttributes))
+                    {
+                        foreach ($this->_extraAttributes as $extraAttribute => $type)
+                        {
+                            $params[] = [
+                                'code' => $extraAttribute,
+                                'label' => $this->getAttributeValue($simpleProduct,$extraAttribute,$type)
+                            ];
+                        }
+                    }
+
+                    $categoryIds = $simpleProduct->getCategoryIds();
+                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
+                    $price = (float)$simpleProduct->getPrice();
+                    $finalPrice = (float)$simpleProduct->getFinalPrice();
+
+                    $result[$i] = [
+                        'id' => $simpleProduct->getId(),
+                        'url' => $simpleProduct->getProductUrl(),
+                        'price' => $finalPrice,
+                        'picture' => $this->getProductImageUrl($simpleProduct->getImage(),$simpleProduct->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
+                        'name' => $simpleProduct->getName(),
+                        'description' => $product->getData($this->_descriptionAttribute),
+                        'available' => false,
+                        'categories' => $lastCategoryId,
+                        'group_id' => $groupId,
+                        'params' => $params
+                    ];
+
+                    if(count($this->_modelAttribute))
+                    {
+                        $key = key($this->_modelAttribute);
+                        $result[$i]['model'] = $this->getAttributeValue($simpleProduct,$key,$this->_modelAttribute[$key]);
+                    }
+                    else
+                    {
+                        $result[$i]['model'] = null;
+                    }
+
+                    if(count($this->_vendorAttribute))
+                    {
+                        $key = key($this->_vendorAttribute);
+                        $result[$i]['vendor'] = $this->getAttributeValue($simpleProduct,$key,$this->_vendorAttribute[$key]);
                     }
                     else
                     {
                         $result[$i]['vendor'] = null;
                     }
 
-                    $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+                    $applySpecial = $this->applySpecialPrice($price,$simpleProduct->getSpecialPrice(),
+                        $simpleProduct->getSpecialFromDate(),$simpleProduct->getSpecialToDate());
 
                     if($applySpecial)
                     {
@@ -1282,16 +1212,135 @@ class Feed
                         $result[$i]['oldprice'] = $price;
                     }
 
-                    if(!is_null($minimalPrice) && $minimalPrice < $price)
+                    if(!is_null($finalPrice) && $finalPrice < $price)
                     {
-                        $result[$i]['price'] = $minimalPrice;
+                        $result[$i]['price'] = $finalPrice;
                         $result[$i]['oldprice'] = $price;
                     }
                 }
 
-                $i++;
+                continue;
+            }
+            else{
+                $params = [];
+
+                if(count($this->_extraAttributes))
+                {
+                    foreach ($this->_extraAttributes as $extraAttribute => $type)
+                    {
+                        $params[] = [
+                            'code' => $extraAttribute,
+                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                        ];
+                    }
+                }
+
+                $categoryIds = $product->getCategoryIds();
+                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
+                $result[$i] = [
+                    'id' => $product->getId(),
+                    'url' => $product->getProductUrl(),
+                    'price' => $finalPrice,
+                    'picture' => $productImage,
+                    'name' => $product->getName(),
+                    'description' => $product->getData($this->_descriptionAttribute),
+                    'available' => false,
+                    'categories' => $lastCategoryId,
+                    'group_id' => $groupId,
+                    'params' => $params
+                ];
+
+                if(count($this->_modelAttribute))
+                {
+                    $key = key($this->_modelAttribute);
+                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['model'] = null;
+                }
+
+                if(count($this->_vendorAttribute))
+                {
+                    $key = key($this->_vendorAttribute);
+                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                }
+                else
+                {
+                    $result[$i]['vendor'] = null;
+                }
+
+                $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+
+                if($applySpecial)
+                {
+                    $result[$i]['price'] = $specialPrice;
+                    $result[$i]['oldprice'] = $price;
+                }
+
+                if(!is_null($minimalPrice) && $minimalPrice < $price)
+                {
+                    $result[$i]['price'] = $minimalPrice;
+                    $result[$i]['oldprice'] = $price;
+                }
             }
 
+            if(isset($result[$i]['id']) && isset($productByIds[$result[$i]['id']]))
+            {
+                foreach ($productByIds[$result[$i]['id']] as $webisteCode => $productByStockId)
+                {
+                    $result[$i]['stock'] = [];
+                    $result[$i]['stock']['stock_id'] = $webisteCode;
+
+                    $result[$i]['stock']['id'] = $productByStockId->getId();
+                    $result[$i]['stock']['name'] = $product->getName();
+                    $result[$i]['stock']['description'] = $productByStockId->getData($this->_descriptionAttribute);
+
+                    if($productByStockId->getTypeId() == Type::TYPE_SIMPLE)
+                    {
+                        $stockItem = $this->_stockRegistry->getStockItem(
+                            $productByStockId->getId()
+                        );
+
+                        $productAvailable = $productByStockId->getStatus() == Status::STATUS_ENABLED
+                            && $stockItem->getQty() > 0 && $stockItem->getIsInStock();
+                    }
+                    else{
+                        $productAvailable = $productByStockId->getIsSalable();
+                    }
+
+                    $result[$i]['stock']['available'] = $productAvailable;
+
+                    $price = (float)$product->getData('price');
+                    $finalPrice = (float)$product->getData('final_price');
+                    $specialPrice = $product->getData('special_price');
+                    $specialFromDate = $product->getData('special_from_date');
+                    $specialToDate = $product->getData('special_to_date');
+                    $minimalPrice = (float)$product->getMinimalPrice();
+
+                    $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+
+                    $result[$i]['stock']['price'] = $finalPrice;
+
+                    if($applySpecial)
+                    {
+                        $result[$i]['stock']['price'] = $specialPrice;
+                        $result[$i]['stock']['oldprice'] = $price;
+                    }
+
+                    if(!is_null($minimalPrice) && $minimalPrice < $price)
+                    {
+                        $result[$i]['stock']['price'] = $minimalPrice;
+                        $result[$i]['stock']['oldprice'] = $price;
+                    }
+
+                    $result[$i]['stock']['url'] = $productByStockId->getProductUrl();
+                    $result[$i]['stock']['picture'] = $this->getProductImageUrl($productByStockId->getImage(),$productByStockId->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA));
+                }
+            }
+
+            $i++;
         }
 
         unset($collection);
@@ -1356,10 +1405,11 @@ class Feed
     }
 
     /**
-     * @param $storeId
+     * @param null $storeId
+     * @param bool $stockIdMode
      * @throws FileSystemException
      */
-    public function saveToFile($storeId)
+    public function saveToFile($storeId = null, $stockIdMode = false)
     {
         $dirWrite = $this->_filesystem->getDirectoryWrite(
             DirectoryList::MEDIA
@@ -1378,7 +1428,7 @@ class Feed
             $this->_fileWrite->lock();
             try {
                 $this->_fileWrite->write($this->buildHeader() . "\n");
-                $this->_fileWrite->write($this->buildCategories() . "\n");
+                $this->_fileWrite->write($this->buildCategories($stockIdMode) . "\n");
                 $this->_fileWrite->write($this->buildProducts() . "\n");
                 $this->_fileWrite->write($this->buildFooter() . "\n");
             } finally {
@@ -1407,22 +1457,43 @@ class Feed
     /**
      * @return string
      */
-    public function buildCategories()
+    public function buildCategories($stockIdMode = false)
     {
         $categories = "<categories>\n";
 
-        foreach ($this->_categories as $category)
+        if($stockIdMode)
         {
-            $categories .= "<category id=\"{$category['id']}\"";
-
-            if(!is_null($category['parentId']))
+            foreach ($this->_categories as $category)
             {
-                $categories.= " parentId=\"{$category['parentId']}\"";
-            }
+                foreach ($category as $item)
+                {
+                    $categories .= "<category id=\"{$item['id']}\"";
 
-            $categories.= ">";
-            $categories .= $category['name'];
-            $categories .= "</category>\n";
+                    if(!is_null($item['parentId']))
+                    {
+                        $categories.= " parentId=\"{$item['parentId']}\"";
+                    }
+
+                    $categories.= ">";
+                    $categories .= $item['name'];
+                    $categories .= "</category>\n";
+                }
+            }
+        }
+        else{
+            foreach ($this->_categories as $category)
+            {
+                $categories .= "<category id=\"{$category['id']}\"";
+
+                if(!is_null($category['parentId']))
+                {
+                    $categories.= " parentId=\"{$category['parentId']}\"";
+                }
+
+                $categories.= ">";
+                $categories .= $category['name'];
+                $categories .= "</category>\n";
+            }
         }
 
         $categories .= "</categories>";
@@ -1469,6 +1540,8 @@ class Feed
             }
 
             $products .= "<picture>{$product['picture']}</picture>";
+
+            $product['name'] = $this->replaceXmlEntities($product['name']);
             $products .= "<name>{$product['name']}</name>";
 
 
@@ -1481,12 +1554,12 @@ class Feed
                 }
             }
 
-
             $product['description'] = strip_tags($product['description']);
 
             if(strlen($product['description']) >= 200)
             {
-                $product['description'] = substr($product['description'],0,200);
+                $product['description'] = substr($product['description'],0,190);
+                $product['description'] = $this->replaceXmlEntities($product['description']);
             }
 
             $product['description'] = $this->replaceXmlEntities($product['description']);
@@ -1507,6 +1580,65 @@ class Feed
             if($product['vendor'])
             {
                 $products .= "<vendor>{$product['vendor']}</vendor>";
+            }
+
+            if(isset($product['stock']))
+            {
+
+                $product['stock']['name'] = $this->replaceXmlEntities($product['stock']['name']);
+
+                $products .= "<stock id=\"{$product['stock']['stock_id']}\">";
+                $products .= "<picture>{$product['stock']['picture']}</picture>";
+                $products .= "<name>{$product['stock']['name']}</name>";
+                $products .= "<price>{$product['stock']['price']}</price>";
+                $products .= "<url>{$product['stock']['url']}</url>";
+
+
+                $product['stock']['available'] = $product['stock']['available'] ? 'true' : 'false';
+
+                $products .= "<available>{$product['stock']['available']}</available>";
+
+                if(isset($product['stock']['oldprice']))
+                {
+                    $products .= "<oldprice>{$product['stock']['oldprice']}</oldprice>";
+                }
+
+                if(strlen($product['stock']['description']) >= 200)
+                {
+                    $product['stock']['description'] = substr($product['description'],0,190);
+                    $product['stock']['description'] = $this->replaceXmlEntities($product['description']);
+                }
+
+                if($this->hasHtml($product['stock']['description']))
+                {
+                    $product['stock']['description'] = strip_tags($product['stock']['description']);
+
+                    $products .= "<description><![CDATA[{$product['stock']['description']}]]></description>";
+                }
+                else{
+                    $products .= "<description>{$product['stock']['description']}</description>";
+                }
+
+                if(isset($product['stock']['params']) && count($product['stock']['params']))
+                {
+                    foreach ($product['stock']['params'] as $param)
+                    {
+                        if($param['label'])
+                            $products .= "<param name=\"{$param['code']}\">{$param['label']}</param>";
+                    }
+                }
+
+                if(isset($product['stock']['model']))
+                {
+                    $products .= "<model>{$product['stock']['model']}</model>";
+                }
+
+                if(isset($product['stock']['vendor']))
+                {
+                    $products .= "<vendor>{$product['stock']['vendor']}</vendor>";
+                }
+
+                $products .= "</stock>";
             }
 
             $products .= "</offer>\n";

@@ -29,7 +29,7 @@ define([
 
                             try {
                                 rrApi.setEmail(userData.email, userAdditional);
-                            } catch(e) {}
+                            } catch(e) {console.log(e)}
                         }
                     }
                     customerData.set('improntus-retailrocket-newsletter', {});

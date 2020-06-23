@@ -30,7 +30,7 @@ foreach ($order->getAllVisibleItems() as $allVisibleItem)
                     "transaction": "<?= /* @noEscape */ $order->getIncrementId()?>",
                     "items": <?= /* @noEscape */ json_encode($orderItems) ?>
             });
-            } catch(e) {}
+            } catch(e) {console.log(e)}
         })
     </script>
     <!-- End RetailRocket Transaction Event -->

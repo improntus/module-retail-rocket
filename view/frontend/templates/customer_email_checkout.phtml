@@ -40,7 +40,7 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
                         rrApi.setEmail(email, userAdditional);
                         emailSent = true;
                     }
-                } catch(e) {}
+                } catch(e) {console.log(e)}
             })
         })
     </script>
@@ -84,7 +84,7 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
                                 rrApi.setEmail(email, userAdditional);
                                 emailSent = true;
                             }
-                        } catch(e) {}
+                        } catch(e) {console.log(e)}
                     })
                 }
             })
