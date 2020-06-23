@@ -55,7 +55,6 @@ class Generate extends Action
         set_time_limit(18000);
         
         try {
-            $this->_feed->generate();
             $feedGenerated = false;
 
             if($this->_retailRocketHelper->isSingleXmlFeedEnabled())
