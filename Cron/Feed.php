@@ -1258,21 +1258,26 @@ class Feed
                         $result[$i]['stock'][$webisteCode] = [];
 
                         $result[$i]['stock'][$webisteCode]['id'] = $productByStockId->getId();
-                        $result[$i]['stock'][$webisteCode]['name'] = $product->getName();
+                        $result[$i]['stock'][$webisteCode]['name'] = $productByStockId->getName();
                         $result[$i]['stock'][$webisteCode]['description'] = $productByStockId->getData($this->_descriptionAttribute);
 
                         $productAvailable = $productByStockId->getIsSalable();
 
                         $result[$i]['stock'][$webisteCode]['available'] = $productAvailable;
 
-                        $price = (float)$product->getData('price');
-                        $finalPrice = (float)$product->getData('final_price');
-                        $specialPrice = $product->getData('special_price');
-                        $specialFromDate = $product->getData('special_from_date');
-                        $specialToDate = $product->getData('special_to_date');
-                        $minimalPrice = (float)$product->getMinimalPrice();
+                        $price = (float)$productByStockId->getData('price');
+                        $finalPrice = (float)$productByStockId->getData('final_price');
+                        $specialPrice = $productByStockId->getData('special_price');
+                        $specialFromDate = $productByStockId->getData('special_from_date');
+                        $specialToDate = $productByStockId->getData('special_to_date');
+                        $minimalPrice = (float)$productByStockId->getMinimalPrice();
 
                         $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+
+                        if($finalPrice == 0)
+                        {
+                            $finalPrice = $minimalPrice;
+                        }
 
                         $result[$i]['stock'][$webisteCode]['price'] = $finalPrice;
 
@@ -1286,11 +1291,6 @@ class Feed
                         {
                             $result[$i]['stock'][$webisteCode]['price'] = $minimalPrice;
                             $result[$i]['stock'][$webisteCode]['oldprice'] = $price;
-                        }
-
-                        if($finalPrice == 0)
-                        {
-                            $finalPrice = $minimalPrice;
                         }
 
                         $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
