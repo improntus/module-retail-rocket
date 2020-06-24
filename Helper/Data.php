@@ -171,6 +171,14 @@ class Data extends AbstractHelper
     }
 
     /**
+     * @return bool
+     */
+    public function removeSpecialCharsDescription()
+    {
+        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/remove_special_chars_description');
+    }
+
+    /**
      * @return Session
      */
     public function getSession()
@@ -226,6 +234,17 @@ class Data extends AbstractHelper
                     $links[] = $retailRocketFiles[$storeId];
                 }
             }
+
+            if(isset($retailRocketFiles['stockid']))
+            {
+                $store = reset($stores);
+
+                $retailRocketFiles['stockid']['store_name'] = __('XML file with StockId');
+                $retailRocketFiles['stockid']['link'] = $store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA) .
+                    $retailRocketFiles['stockid']['file'];
+
+                $links[] = $retailRocketFiles['stockid'];
+            }
         }
 
         return $links;
@@ -259,5 +278,35 @@ class Data extends AbstractHelper
             $this->_logger->error($exception);
             return null;
         }
+    }
+
+    /**
+     * @param $text
+     * @return string|string[]|null
+     */
+    public function cleanString($text)
+    {
+        $utf8 = [
+            '/[áàâãªä]/u'   =>   'a',
+            '/[ÁÀÂÃÄ]/u'    =>   'A',
+            '/[ÍÌÎÏ]/u'     =>   'I',
+            '/[íìîï]/u'     =>   'i',
+            '/[éèêë]/u'     =>   'e',
+            '/[ÉÈÊË]/u'     =>   'E',
+            '/[óòôõºö]/u'   =>   'o',
+            '/[ÓÒÔÕÖ]/u'    =>   'O',
+            '/[úùûü]/u'     =>   'u',
+            '/[ÚÙÛÜ]/u'     =>   'U',
+            '/ç/'           =>   'c',
+            '/Ç/'           =>   'C',
+            '/ñ/'           =>   'n',
+            '/Ñ/'           =>   'N',
+            '/–/'           =>   '-', // UTF-8 hyphen to "normal" hyphen
+            '/[’‘‹›‚]/u'    =>   ' ', // Literally a single quote
+            '/[“”«»„]/u'    =>   ' ', // Double quote
+            '/ /'           =>   ' ' // nonbreaking space (equiv. to 0x160)
+        ];
+
+        return preg_replace(array_keys($utf8), array_values($utf8), $text);
     }
 }

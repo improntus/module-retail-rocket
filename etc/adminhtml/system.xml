@@ -61,7 +61,11 @@
                     <label>Enable Single XML Feed (only by group id)</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <group id="stockid" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="remove_special_chars_description" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Remove special chars in description attribute</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <group id="stockid" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Stock Id Mode</label>
                     <field id="enable" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Enable StockId Mode</label>
@@ -74,11 +78,11 @@
                         <comment>Select all root categories you want to use in feed</comment>
                     </field>
                 </group>
-                <field id="links" translate="label tooltip" type="button" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="links" translate="label tooltip" type="button" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Click "Generate Retail Rocket Feed" button below. After the process is done every store you have in Magento will have one xml feed.</label>
                     <frontend_model>Improntus\RetailRocket\Block\Adminhtml\Links</frontend_model>
                 </field>
-                <field id="generate" translate="label" type="button" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="generate" translate="label" type="button" sortOrder="55" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Generate Retail Rocket Feed Manually</label>
                     <frontend_model>Improntus\RetailRocket\Block\Adminhtml\Button\Generate</frontend_model>
                     <comment>Xml feed is generated automatically every 1 hour. You don't need generate it every time.</comment>

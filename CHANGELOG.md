@@ -3,10 +3,13 @@ CHANGELOG
 
 ### 1.0.4
 
-- Added "Stock Id" integration by store 
-- Changed filter 
+- Added "Stock Id" integration 
+- Added visibility param
+- Added console command "retailrocket:feed:generate" (only for development purposes)
+- Added optional filter for special chars on "description" attribute
+- Updated crontab group
 
-### 1.0.4
+### 1.0.3
 
 - XSS prevention fixes in templates
 
