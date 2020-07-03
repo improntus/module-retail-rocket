@@ -266,15 +266,15 @@ class Feed
      */
     public function generateByWebsite()
     {
-        $websites = $this->_storeManager->getWebsites();
+        $stores = $this->_storeManager->getStores();
 
-        foreach ($websites as $_website)
+        foreach ($stores as $_store)
         {
-            $this->_categories = $this->getCategoryTree($_website->getRootCategoryId());
-            $mediaStoreUrl = $_website->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
-            $this->_products = $this->getProducts($_website->getId(),$mediaStoreUrl);
+            $this->_categories = $this->getCategoryTree($_store->getRootCategoryId());
+            $mediaStoreUrl = $_store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
+            $this->_products = $this->getProducts($_store->getId(),$mediaStoreUrl);
 
-            $this->saveToFile($_website->getId());
+            $this->saveToFile($_store->getId());
         }
     }
 
