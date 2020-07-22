@@ -18,7 +18,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Class Data
  *
- * @version 1.0.4
+ * @version 1.0.5
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Helper
@@ -91,11 +91,12 @@ class Data extends AbstractHelper
     }
 
     /**
+     * @param null $scopeCode
      * @return bool
      */
-    public function isSingleXmlFeedEnabled()
+    public function isSingleXmlFeedEnabled($scopeCode = null)
     {
-        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/enable_single_feed');
+        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/enable_single_feed',ScopeInterface::SCOPE_WEBSITES,$scopeCode);
     }
 
     /**
@@ -160,6 +161,14 @@ class Data extends AbstractHelper
     public function getAlwaysSubscribeCustomerEmail()
     {
         return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/always_subscribe_customer_email', ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
+     * @return bool
+     */
+    public function getProductCreationStartDate()
+    {
+        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/product_creation_start_date', ScopeInterface::SCOPE_STORE);
     }
 
     /**
@@ -266,12 +275,10 @@ class Data extends AbstractHelper
     /**
      * @return string|null
      */
-    public function getCurrentWebsiteCode()
+    public function getCurrentStoreCode()
     {
         try{
-            $websiteCode = $this->_storeManager->getWebsite()->getCode();
-
-            return $websiteCode;
+            return $this->_storeManager->getStore()->getCode();
         }
         catch (LocalizedException $exception)
         {
@@ -281,32 +288,37 @@ class Data extends AbstractHelper
     }
 
     /**
-     * @param $text
+     * @param $value
      * @return string|string[]|null
      */
-    public function cleanString($text)
+    public function cleanString($value)
     {
-        $utf8 = [
-            '/[áàâãªä]/u'   =>   'a',
-            '/[ÁÀÂÃÄ]/u'    =>   'A',
-            '/[ÍÌÎÏ]/u'     =>   'I',
-            '/[íìîï]/u'     =>   'i',
-            '/[éèêë]/u'     =>   'e',
-            '/[ÉÈÊË]/u'     =>   'E',
-            '/[óòôõºö]/u'   =>   'o',
-            '/[ÓÒÔÕÖ]/u'    =>   'O',
-            '/[úùûü]/u'     =>   'u',
-            '/[ÚÙÛÜ]/u'     =>   'U',
-            '/ç/'           =>   'c',
-            '/Ç/'           =>   'C',
-            '/ñ/'           =>   'n',
-            '/Ñ/'           =>   'N',
-            '/–/'           =>   '-', // UTF-8 hyphen to "normal" hyphen
-            '/[’‘‹›‚]/u'    =>   ' ', // Literally a single quote
-            '/[“”«»„]/u'    =>   ' ', // Double quote
-            '/ /'           =>   ' ' // nonbreaking space (equiv. to 0x160)
-        ];
+        $result = '';
 
-        return preg_replace(array_keys($utf8), array_values($utf8), $text);
+        if (empty($value))
+        {
+            return $result;
+        }
+
+        $length = strlen($value);
+
+        for ($i=0; $i < $length; $i++)
+        {
+            $current = ord($value{$i});
+            if (($current == 0x9) ||
+                ($current == 0xA) ||
+                ($current == 0xD) ||
+                (($current >= 0x20) && ($current <= 0xD7FF)) ||
+                (($current >= 0xE000) && ($current <= 0xFFFD)) ||
+                (($current >= 0x10000) && ($current <= 0x10FFFF)))
+            {
+                $result .= chr($current);
+            }
+            else
+            {
+                $result .= ' ';
+            }
+        }
+        return $result;
     }
 }

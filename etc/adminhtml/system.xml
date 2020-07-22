@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /**
- * @version 1.0.4
+ * @version 1.0.5
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus_RetailRocket
@@ -19,7 +19,10 @@
             <resource>Improntus_RetailRocket::config</resource>
             <group id="configuration" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Configuration</label>
-                <field id="enabled" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="version" type="text" translate="label comment" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <frontend_model>Improntus\RetailRocket\Block\Adminhtml\System\Config\Form\Version</frontend_model>
+                </field>
+                <field id="enabled" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enabled</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
@@ -57,13 +60,17 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>If not, the customer must click "I would like to receive exclussive offers." in checkout success page</comment>
                 </field>
-                <field id="enable_single_feed" translate="label" type="select" sortOrder="38" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enable_single_feed" translate="label" type="select" sortOrder="38" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Single XML Feed (only by group id)</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="remove_special_chars_description" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="remove_special_chars_description" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Remove special chars in description attribute</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="product_creation_start_date" translate="label" type="text" sortOrder="42" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Product creation start date</label>
+                    <comment>Optional. It must be set in format YYYY-MM-DD</comment>
                 </field>
                 <group id="stockid" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Stock Id Mode</label>

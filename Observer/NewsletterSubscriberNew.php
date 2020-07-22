@@ -12,7 +12,7 @@ use Magento\Customer\Model\Customer;
 /**
  * Class NewsletterSubscriberNew
  *
- * @version 1.0.4
+ * @version 1.0.5
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Observer
@@ -135,7 +135,7 @@ class NewsletterSubscriberNew implements ObserverInterface
 
         if($this->_retailRocketHelper->isStockIdEnabled())
         {
-            $result['additional']['stockId'] = $this->_retailRocketHelper->getCurrentWebsiteCode();
+            $result['additional']['stockId'] = $this->_retailRocketHelper->getCurrentStoreCode();
         }
 
         return $result;

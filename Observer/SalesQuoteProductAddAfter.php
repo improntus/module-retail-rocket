@@ -11,7 +11,7 @@ use Magento\Sales\Model\Order\Item;
 /**
  * Class SalesQuoteProductAddAfter
  *
- * @version 1.0.4
+ * @version 1.0.5
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Observer
@@ -79,7 +79,7 @@ class SalesQuoteProductAddAfter implements ObserverInterface
 
 		if($this->_retailRocketHelper->isStockIdEnabled())
 		{
-            $this->_retailRocketSession->setStockId($this->_retailRocketHelper->getCurrentWebsiteCode());
+            $this->_retailRocketSession->setStockId($this->_retailRocketHelper->getCurrentStoreCode());
         }
 
 		$this->_retailRocketSession->setAddToCart($productId);

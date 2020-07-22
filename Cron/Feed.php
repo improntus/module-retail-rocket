@@ -31,7 +31,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 /**
  * Class Feed
  *
- * @version 1.0.4
+ * @version 1.0.5
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
@@ -245,10 +245,7 @@ class Feed
     public function execute()
     {
         try {
-            if($this->_retailRocketHelper->isSingleXmlFeedEnabled())
-            {
-                $this->generateByWebsite();
-            }
+            $this->generateByStore();
 
             if($this->_retailRocketHelper->isStockIdEnabled())
             {
@@ -264,17 +261,23 @@ class Feed
      * @throws FileSystemException
      * @throws NoSuchEntityException
      */
-    public function generateByWebsite()
+    public function generateByStore()
     {
         $stores = $this->_storeManager->getStores();
 
         foreach ($stores as $_store)
         {
-            $this->_categories = $this->getCategoryTree($_store->getRootCategoryId());
-            $mediaStoreUrl = $_store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
-            $this->_products = $this->getProducts($_store->getId(),$mediaStoreUrl);
+            if($_store->getConfig('retailrocket/configuration/enable_single_feed'))
+            {
+                $this->_categories = $this->getCategoryTree($_store->getRootCategoryId());
+                $mediaStoreUrl = $_store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
+                $this->_products = $this->getProducts($_store->getId(),$mediaStoreUrl);
 
-            $this->saveToFile($_store->getId());
+                $this->saveToFile($_store->getId());
+
+                $this->_categories = [];
+                $this->_products = [];
+            }
         }
     }
 
@@ -284,7 +287,7 @@ class Feed
      */
     public function generateWithStockId()
     {
-        $websites = $this->_storeManager->getWebsites();
+        $stores = $this->_storeManager->getStores();
         $categoryIds = $this->_retailRocketHelper->getStockIdCategoriesIds();
 
         foreach ($categoryIds as $categoryId)
@@ -292,22 +295,22 @@ class Feed
             $this->_categories[] = $this->getCategoryTree($categoryId);
         }
 
-        $productsByWebsite = [];
+        $productsByStore = [];
 
         $allProducts = $this->getProductCollection(null,true);
 
-        foreach ($websites as $_website)
+        foreach ($stores as $_store)
         {
-            $productsByWebsite[$_website->getCode()] = [];
-            $productsByWebsite[$_website->getCode()]['products'] = $this->getProductCollection($_website->getId(),true);
+            $productsByStore[$_store->getCode()] = [];
+            $productsByStore[$_store->getCode()]['products'] = $this->getProductCollection($_store->getWebsiteId(),true);
         }
 
         $productByIds = [];
-        foreach ($productsByWebsite as $websiteCode => $products)
+        foreach ($productsByStore as $storeCode => $products)
         {
             foreach ($products['products'] as $product)
             {
-                $productByIds[$product->getId()][$websiteCode] = $product;
+                $productByIds[$product->getId()][$storeCode] = $product;
             }
         }
 
@@ -663,7 +666,7 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.4) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.5) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
@@ -1301,7 +1304,7 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.4) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.5) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))

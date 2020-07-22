@@ -24,7 +24,7 @@ use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 /**
  * Class Index
  *
- * @version 1.0.4
+ * @version 1.0.5
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Controller\Index
@@ -128,9 +128,9 @@ class Index extends \Magento\Checkout\Controller\Cart
      */
     public function execute()
     {
-        $sku = $this->getRequest()->getParam('sku');
-        $qty = $this->getRequest()->getParam('qty');
-        $productId = $this->getRequest()->getParam('id');
+        $sku = $this->getRequest()->getParam('sku') ? explode(',',$this->getRequest()->getParam('sku')) : null;
+        $qty = $this->getRequest()->getParam('qty') ? explode(',',$this->getRequest()->getParam('qty')) : null;
+        $productId = $this->getRequest()->getParam('id') ? explode(',',$this->getRequest()->getParam('id')) : null;
         $ga = $this->getRequest()->getParam('_ga');
         $cartUrl = $this->_objectManager->get('Magento\Checkout\Helper\Cart')->getCartUrl();
 
@@ -139,19 +139,78 @@ class Index extends \Magento\Checkout\Controller\Cart
         }
 
         try {
-            if ($sku) {
-                $product = $this->getProductBySku($sku);
-            } elseif ($productId) {
-                $product = $this->getProductById($productId);
+            if (isset($sku))
+            {
+                if(is_array($sku))
+                {
+                    if(count($sku) != count($qty))
+                    {
+                        throw new NotFoundException(__('Number of product sku must be equal to qty'));
+                    }
+
+                    foreach ($sku as $index => $_sku)
+                    {
+                        $product = $this->getProductBySku($_sku);
+
+                        $params = [
+                            'qty' => $qty[$index]
+                        ];
+
+                        $this->cart->addProduct($product, $params);
+                    }
+                }
+                else{
+                    if(is_array($qty))
+                    {
+                        throw new NotFoundException(__('Qty must be numeric'));
+                    }
+
+                    $product = $this->getProductBySku($sku);
+
+                    $params = [
+                        'qty' => $qty ? $qty : 1
+                    ];
+
+                    $this->cart->addProduct($product, $params);
+                }
+            }
+            elseif (isset($productId))
+            {
+                if(is_array($productId))
+                {
+                    if(count($productId) != count($qty))
+                    {
+                        throw new NotFoundException(__('Number of product ids must be equal to qty'));
+                    }
+
+                    foreach ($productId as $index => $_productId)
+                    {
+                        $product = $this->getProductById($_productId);
+
+                        $params = [
+                            'qty' => $qty[$index]
+                        ];
+
+                        $this->cart->addProduct($product, $params);
+                    }
+                }
+                else{
+                    if(is_array($qty))
+                    {
+                        throw new NotFoundException(__('Qty must be numeric'));
+                    }
+
+                    $product = $this->getProductById($productId);
+
+                    $params = [
+                        'qty' => $qty ? $qty : 1
+                    ];
+
+                    $this->cart->addProduct($product, $params);
+                }
             } else {
                 throw new NotFoundException(__('Not found'));
             }
-
-            $params = [
-                'qty' => $qty ? $qty : 1
-            ];
-
-            $this->cart->addProduct($product, $params);
 
             $this->_eventManager->dispatch(
                 'checkout_cart_add_product_complete',
@@ -160,7 +219,7 @@ class Index extends \Magento\Checkout\Controller\Cart
 
             $this->cart->save();
 
-            $couponCode = $this->getRequest()->getParam('cupon');
+            $couponCode = $this->getRequest()->getParam('coupon');
 
             if ($couponCode) {
                 $cartQuote = $this->quoteRepository->getActive($this->cart->getQuote()->getId());

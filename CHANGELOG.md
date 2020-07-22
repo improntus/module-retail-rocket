@@ -1,6 +1,12 @@
 CHANGELOG
 ---------
 
+### 1.0.5
+
+- Now xml feed can be enabled by store  
+- Added multiple "add to cart" 
+- Fixed stockId by store 
+
 ### 1.0.4
 
 - Added "Stock Id" integration 
@@ -15,7 +21,7 @@ CHANGELOG
 
 ### 1.0.2
 
-- Fixed a [bug](https://github.com/opis/closure/issues/40) that prevented serialization to work correctly.
+- Minor bug fixes
 
 ### 1.0.1
 

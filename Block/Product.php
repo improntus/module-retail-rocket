@@ -10,7 +10,7 @@ use Magento\Framework\View\Element\Template;
 /**
  * Class Product
  *
- * @version 1.0.4
+ * @version 1.0.5
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block
@@ -57,7 +57,7 @@ class Product extends Tracker
 
             if($this->_helper->isStockIdEnabled())
             {
-                $websiteCodeStockId = $this->_helper->getCurrentWebsiteCode();
+                $websiteCodeStockId = $this->_helper->getCurrentStoreCode();
 
                     $html = <<<HTML
 <!-- Begin RetailRocket ProductView StockId Event -->
