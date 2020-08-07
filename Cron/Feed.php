@@ -31,7 +31,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 /**
  * Class Feed
  *
- * @version 1.0.5
+ * @version 1.0.6
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
@@ -679,7 +679,7 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.5) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.6) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
@@ -1317,7 +1317,7 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.5) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.6) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
