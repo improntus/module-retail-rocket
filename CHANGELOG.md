@@ -8,7 +8,7 @@ CHANGELOG
 - Added "product creation start date filter"
 - Added configurable crontab expression
 
-### 1.0.6
+### 1.0.5
 
 - Now xml feed can be enabled by store  
 - Added multiple "add to cart" 
