@@ -2,7 +2,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
     <group id="retail_rocket">
         <job name="retailrocket_generate_feed" instance="Improntus\RetailRocket\Cron\Feed" method="execute">
-            <schedule>0 * * * *</schedule>
+            <config_path>retailrocket/configuration/cron_expression</config_path>
         </job>
     </group>
 </config>

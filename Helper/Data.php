@@ -164,11 +164,21 @@ class Data extends AbstractHelper
     }
 
     /**
-     * @return bool
+     * @return string|null
      */
     public function getProductCreationStartDate()
     {
-        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/product_creation_start_date', ScopeInterface::SCOPE_STORE);
+        $productCreationStartDate  = $this->scopeConfig->getValue('retailrocket/configuration/product_creation_start_date', ScopeInterface::SCOPE_STORE);
+
+        $isValidDate = (bool)strtotime($productCreationStartDate);
+
+        if($isValidDate)
+        {
+            return $productCreationStartDate;
+        }
+        else{
+            return null;
+        }
     }
 
     /**

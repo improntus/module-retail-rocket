@@ -59,7 +59,7 @@ class Generate extends Action
 
             if($this->_retailRocketHelper->isSingleXmlFeedEnabled())
             {
-                $this->_feed->generateByWebsite();
+                $this->_feed->generateByStore();
                 $feedGenerated = true;
             }
 

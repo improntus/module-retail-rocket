@@ -6,6 +6,10 @@ use Magento\Framework\Module\ModuleListInterface;
 
 /**
  * Class Version
+ *
+ * @version 1.0.5
+ * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block\Adminhtml\System\Config\Form
  */
 class Version extends \Magento\Config\Block\System\Config\Form\Field

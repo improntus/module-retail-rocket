@@ -68,9 +68,15 @@
                     <label>Remove special chars in description attribute</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="product_creation_start_date" translate="label" type="text" sortOrder="42" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Product creation start date</label>
+                <field id="product_creation_start_date" translate="label" type="date" sortOrder="42" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Product creation start date filter</label>
                     <comment>Optional. It must be set in format YYYY-MM-DD</comment>
+                    <frontend_model>Improntus\RetailRocket\Block\Adminhtml\System\Config\Form\Date</frontend_model>
+                </field>
+                <field id="cron_expression" translate="label comment" type="text" sortOrder="43" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Cron Expression for Product Feed Generation</label>
+                    <comment><![CDATA[<strong>Only for advanced users</strong>: Cron expression used to trigger product feed generation process. By default it runs once by hour (0 * * * *)]]></comment>
+                    <backend_model>Improntus\RetailRocket\Model\Config\Cron</backend_model>
                 </field>
                 <group id="stockid" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Stock Id Mode</label>

@@ -1,6 +1,13 @@
 CHANGELOG
 ---------
 
+### 1.0.6
+
+- Now, if store code is added to urls it is set in stockId mode
+- Fixed visibility issue
+- Added "product creation start date filter"
+- Added configurable crontab expression
+
 ### 1.0.5
 
 - Now xml feed can be enabled by store  

@@ -302,7 +302,7 @@ class Feed
         foreach ($stores as $_store)
         {
             $productsByStore[$_store->getCode()] = [];
-            $productsByStore[$_store->getCode()]['products'] = $this->getProductCollection($_store->getWebsiteId(),true);
+            $productsByStore[$_store->getCode()]['products'] = $this->getProductCollection($_store->getWebsiteId(),true,$_store->getId());
         }
 
         $productByIds = [];
@@ -313,7 +313,6 @@ class Feed
                 $productByIds[$product->getId()][$storeCode] = $product;
             }
         }
-
 
         $this->_products = $this->getProductsWithStockId($allProducts, $productByIds);
         $this->saveToFile('stockid',true);
@@ -361,9 +360,10 @@ class Feed
     /**
      * @param null $websiteId
      * @param bool $allAttributes
+     * @param null $storeId
      * @return \Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection
      */
-    public function getProductCollection($websiteId = null, $allAttributes = false)
+    public function getProductCollection($websiteId = null, $allAttributes = false, $storeId = null)
     {
         $productModel = $this->_productFactory->create();
         $collection = $productModel->getCollection();
@@ -411,6 +411,18 @@ class Feed
         if($websiteId)
         {
             $collection->addPriceData(null,$websiteId);
+        }
+
+        if($storeId)
+        {
+            $collection->setStoreId($storeId);
+        }
+
+        $productCreationStartDate = $this->_retailRocketHelper->getProductCreationStartDate();
+
+        if($productCreationStartDate)
+        {
+            $collection->addAttributeToFilter('created_at',['gteq' => $productCreationStartDate]);
         }
 
         return $collection;
@@ -525,7 +537,7 @@ class Feed
                         }
                     }
 
-                    $categoryIds = $childProduct->getCategoryIds();
+                    $categoryIds = $this->getAvailableCategoryIds($childProduct->getCategoryIds());
                     $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
 
                     $result[$i] = [
@@ -612,7 +624,8 @@ class Feed
                     }
                 }
 
-                $categoryIds = $product->getCategoryIds();
+                $categoryIds = $this->getAvailableCategoryIds($product->getCategoryIds());
+
                 $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
 
                 $result[$i] = [
@@ -723,7 +736,7 @@ class Feed
                         }
                     }
 
-                    $categoryIds = $simpleProduct->getCategoryIds();
+                    $categoryIds = $this->getAvailableCategoryIds($simpleProduct->getCategoryIds());
                     $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
 
                     if($simpleProduct->getTypeId() == Type::TYPE_SIMPLE)
@@ -753,7 +766,7 @@ class Feed
                         'categories' => $lastCategoryId,
                         'group_id' => $groupId,
                         'params' => $params,
-                        'visibility' => $product->getVisibility()
+                        'visibility' => $simpleProduct->getVisibility()
                     ];
 
                     if(count($this->_modelAttribute))
@@ -808,7 +821,7 @@ class Feed
                     }
                 }
 
-                $categoryIds = $product->getCategoryIds();
+                $categoryIds = $this->getAvailableCategoryIds($product->getCategoryIds());
                 $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
 
                 $result[$i] = [
@@ -924,7 +937,7 @@ class Feed
 
                 $result[$i] = [
                     'id' => $product->getId(),
-                    'url' => $product->getProductUrl(),
+                    'url' => $product->getUrlInStore(),
                     'price' => (float)$product->getMinimalPrice(),
                     'picture' => $this->getProductImageUrl($product->getImage(),$product->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
                     'name' => $product->getName(),
@@ -1008,7 +1021,7 @@ class Feed
 
                     $result[$i] = [
                         'id' => $childProduct->getId(),
-                        'url' => $childProduct->getProductUrl(),
+                        'url' => $childProduct->getUrlInStore(),
                         'price' => (float)$childProduct->getPrice(),
                         'picture' => $this->getProductImageUrl($childProduct->getImage(),$childProduct->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
                         'name' => $childProduct->getName(),
@@ -1205,7 +1218,7 @@ class Feed
 
                 $result[$i] = [
                     'id' => $product->getId(),
-                    'url' => $product->getProductUrl(),
+                    'url' => $product->getUrlInStore(),
                     'price' => (float)$finalPrice,
                     'picture' => $productImage,
                     'name' => $product->getName(),
@@ -1369,7 +1382,7 @@ class Feed
 
                     $result[$i] = [
                         'id' => $simpleProduct->getId(),
-                        'url' => $simpleProduct->getProductUrl(),
+                        'url' => $simpleProduct->getUrlInStore(),
                         'price' => $finalPrice,
                         'picture' => $this->getProductImageUrl($simpleProduct->getImage(),$simpleProduct->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
                         'name' => $simpleProduct->getName(),
@@ -1438,7 +1451,7 @@ class Feed
 
                 $result[$i] = [
                     'id' => $product->getId(),
-                    'url' => $product->getProductUrl(),
+                    'url' => $product->getUrlInStore(),
                     'price' => $finalPrice,
                     'picture' => $productImage,
                     'name' => $product->getName(),
@@ -1547,6 +1560,31 @@ class Feed
         unset($productModel);
 
         return $result;
+    }
+
+    /**
+     * @param $productCategoryIds
+     * @return array
+     */
+    public function getAvailableCategoryIds($productCategoryIds)
+    {
+        $categories = [];
+
+        if(is_array($productCategoryIds) && count($this->_categories))
+        {
+            foreach ($this->_categories as $category)
+            {
+                foreach ($productCategoryIds as $productCategoryId)
+                {
+                    if($productCategoryId == $category['id'])
+                    {
+                        $categories[] = $productCategoryId;
+                    }
+                }
+            }
+        }
+
+        return $categories;
     }
 
     /**

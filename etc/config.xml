@@ -17,6 +17,7 @@
                 <vendor_attribute>0</vendor_attribute>
                 <always_subscribe_customer_email>1</always_subscribe_customer_email>
                 <enable_single_feed>1</enable_single_feed>
+                <cron_expression>0 * * * *</cron_expression>
             </configuration>
         </retailrocket>
     </default>
