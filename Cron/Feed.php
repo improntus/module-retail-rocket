@@ -27,6 +27,7 @@ use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection as AttributeCollection;
 use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as ConfigurableProduct;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Helper\Image;
 
 /**
  * Class Feed
@@ -141,6 +142,11 @@ class Feed
     protected $_productRepository;
 
     /**
+     * @var Image
+     */
+    protected $_imageHelper;
+
+    /**
      * Feed constructor.
      * @param Data $helper
      * @param LoggerInterface $logger
@@ -155,6 +161,7 @@ class Feed
      * @param StockRegistryInterface $stockRegistry
      * @param ConfigurableProduct $configurable
      * @param ProductRepositoryInterface $productRepository
+     * @param Image $imageHelper
      */
     public function __construct(
         Data $helper,
@@ -169,7 +176,8 @@ class Feed
         AttributeCollection $attributeCollection,
         StockRegistryInterface $stockRegistry,
         ConfigurableProduct $configurable,
-        ProductRepositoryInterface $productRepository
+        ProductRepositoryInterface $productRepository,
+        Image $imageHelper
     ) {
         $this->_retailRocketHelper = $helper;
         $this->logger = $logger;
@@ -187,6 +195,7 @@ class Feed
         $this->_stockRegistry = $stockRegistry;
         $this->_configurable = $configurable;
         $this->_productRepository = $productRepository;
+        $this->_imageHelper = $imageHelper;
 
         $extraAttributes = $helper->getExtraAttributes();
 
@@ -247,10 +256,10 @@ class Feed
         try {
             $this->generateByStore();
 
-            if($this->_retailRocketHelper->isStockIdEnabled())
-            {
-                $this->generateWithStockId();
-            }
+//            if($this->_retailRocketHelper->isStockIdEnabled())
+//            {
+//                $this->generateWithStockId();
+//            }
         } catch (Exception $e)
         {
             $this->logger->critical($e);
@@ -270,8 +279,7 @@ class Feed
             if($_store->getConfig('retailrocket/configuration/enable_single_feed'))
             {
                 $this->_categories = $this->getCategoryTree($_store->getRootCategoryId());
-                $mediaStoreUrl = $_store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
-                $this->_products = $this->getProducts($_store->getId(),$mediaStoreUrl);
+                $this->_products = $this->getProducts($_store->getId());
 
                 $this->saveToFile($_store->getId());
 
@@ -385,6 +393,7 @@ class Feed
                 ->addAttributeToSelect('short_description')
                 ->addAttributeToSelect('visibility')
                 ->addAttributeToSelect('image')
+                ->addAttributeToSelect('small_image')
                 ->addUrlRewrite();
 
             $collection->addAttributeToSelect($this->_descriptionAttribute);
@@ -430,11 +439,10 @@ class Feed
 
 
     /**
-     * @param int $websiteId
-     * @param string $mediaStoreUrl
+     * @param $websiteId
      * @return array
      */
-    public function getProducts($websiteId,$mediaStoreUrl)
+    public function getProducts($websiteId)
     {
         $result = [];
 
@@ -486,7 +494,7 @@ class Feed
                     'id' => $product->getId(),
                     'url' => $this->replaceXmlEntities($product->getProductUrl()),
                     'price' => (float)$product->getMinimalPrice(),
-                    'picture' => $this->getProductImageUrl($product->getImage(),$mediaStoreUrl),
+                    'picture' => $this->getProductImageUrl($product),
                     'name' => $this->replaceXmlEntities($product->getName()),
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
@@ -544,7 +552,7 @@ class Feed
                         'id' => $childProduct->getId(),
                         'url' => $childProduct->getProductUrl(),
                         'price' => (float)$childProduct->getPrice(),
-                        'picture' => $this->getProductImageUrl($childProduct->getImage(),$mediaStoreUrl),
+                        'picture' => $this->getProductImageUrl($childProduct),
                         'name' => $this->replaceXmlEntities($childProduct->getName()),
                         'description' => $childProduct->getData($this->_descriptionAttribute),
                         'available' => $childProduct->getIsSalable(),
@@ -594,7 +602,7 @@ class Feed
                 continue;
             }
 
-            $productImage = $this->getProductImageUrl($product->getImage(),$mediaStoreUrl);
+            $productImage = $this->getProductImageUrl($product);
 
             if($product->getTypeId() == Configurable::TYPE_CODE)
             {
@@ -759,7 +767,7 @@ class Feed
                         'id' => $simpleProduct->getId(),
                         'url' => $simpleProduct->getProductUrl(),
                         'price' => $finalPrice,
-                        'picture' => $this->getProductImageUrl($simpleProduct->getImage(),$mediaStoreUrl),
+                        'picture' => $this->getProductImageUrl($simpleProduct),
                         'name' => $simpleProduct->getName(),
                         'description' => $product->getData($this->_descriptionAttribute),
                         'available' => $productAvailable,
@@ -939,7 +947,7 @@ class Feed
                     'id' => $product->getId(),
                     'url' => $product->getUrlInStore(),
                     'price' => (float)$product->getMinimalPrice(),
-                    'picture' => $this->getProductImageUrl($product->getImage(),$product->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
+                    'picture' => $this->getProductImageUrl($product),
                     'name' => $product->getName(),
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => false,
@@ -994,7 +1002,7 @@ class Feed
                         $result[$i]['stock'][$webisteCode]['price'] = (float)$product->getMinimalPrice();
 
                         $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
-                        $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId->getImage(),$productByStockId->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA));
+                        $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId);
                     }
                 }
 
@@ -1023,7 +1031,7 @@ class Feed
                         'id' => $childProduct->getId(),
                         'url' => $childProduct->getUrlInStore(),
                         'price' => (float)$childProduct->getPrice(),
-                        'picture' => $this->getProductImageUrl($childProduct->getImage(),$childProduct->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
+                        'picture' => $this->getProductImageUrl($childProduct),
                         'name' => $childProduct->getName(),
                         'description' => $childProduct->getData($this->_descriptionAttribute),
                         'available' => false,
@@ -1104,7 +1112,7 @@ class Feed
                             }
 
                             $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
-                            $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId->getImage(),$productByStockId->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA));
+                            $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId);
                         }
                     }
                 }
@@ -1160,7 +1168,7 @@ class Feed
                         }
 
                         $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
-                        $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId->getImage(),$productByStockId->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA));
+                        $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId);
                     }
                 }
 
@@ -1183,7 +1191,7 @@ class Feed
                 $finalPrice = $minimalPrice;
             }
 
-            $productImage = $this->getProductImageUrl($product->getImage(),$product->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA));
+            $productImage = $this->getProductImageUrl($product);
 
             if($product->getTypeId() == Configurable::TYPE_CODE)
             {
@@ -1310,7 +1318,7 @@ class Feed
                         }
 
                         $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
-                        $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId->getImage(),$productByStockId->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA));
+                        $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId);
                     }
                 }
 
@@ -1384,7 +1392,7 @@ class Feed
                         'id' => $simpleProduct->getId(),
                         'url' => $simpleProduct->getUrlInStore(),
                         'price' => $finalPrice,
-                        'picture' => $this->getProductImageUrl($simpleProduct->getImage(),$simpleProduct->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)),
+                        'picture' => $this->getProductImageUrl($simpleProduct),
                         'name' => $simpleProduct->getName(),
                         'description' => $product->getData($this->_descriptionAttribute),
                         'available' => false,
@@ -1549,7 +1557,7 @@ class Feed
                     }
 
                     $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
-                    $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId->getImage(),$productByStockId->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA));
+                    $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId);
                 }
             }
 
@@ -1588,13 +1596,12 @@ class Feed
     }
 
     /**
-     * @param $image
-     * @param $mediaStoreUrl
+     * @param $product
      * @return string
      */
-    public function getProductImageUrl($image,$mediaStoreUrl)
+    public function getProductImageUrl($product)
     {
-        if(!$image)
+        if(!$product->getSmallImage())
         {
             return $this->_viewAssetRepo->getUrl(
                 'Magento_Catalog::images/product/placeholder/image.jpg'
@@ -1602,7 +1609,14 @@ class Feed
         }
         else
         {
-            return $mediaStoreUrl .'catalog/product/'. ltrim($image,'/');
+            $ProductImageType = $this->_retailRocketHelper->getXmlProductImageType();
+
+            $imageUrl = $this->_imageHelper
+                ->init($product, $ProductImageType)
+                ->setImageFile($product->getSmallImage())
+                ->getUrl();
+
+            return $imageUrl;
         }
     }
 

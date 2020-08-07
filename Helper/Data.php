@@ -164,6 +164,14 @@ class Data extends AbstractHelper
     }
 
     /**
+     * @return string
+     */
+    public function getXmlProductImageType()
+    {
+        return $this->scopeConfig->getValue('retailrocket/configuration/xml_product_image_type', ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
      * @return string|null
      */
     public function getProductCreationStartDate()

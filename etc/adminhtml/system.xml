@@ -68,6 +68,10 @@
                     <label>Remove special chars in description attribute</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="xml_product_image_type" translate="label" type="select" sortOrder="41" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Image type used for xml feed</label>
+                    <source_model>Improntus\RetailRocket\Model\Config\Source\ImageType</source_model>
+                </field>
                 <field id="product_creation_start_date" translate="label" type="date" sortOrder="42" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Product creation start date filter</label>
                     <comment>Optional. It must be set in format YYYY-MM-DD</comment>
