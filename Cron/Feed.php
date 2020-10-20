@@ -32,7 +32,7 @@ use Magento\Catalog\Helper\Image;
 /**
  * Class Feed
  *
- * @version 1.0.6
+ * @version 1.0.7
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
@@ -256,10 +256,10 @@ class Feed
         try {
             $this->generateByStore();
 
-//            if($this->_retailRocketHelper->isStockIdEnabled())
-//            {
-//                $this->generateWithStockId();
-//            }
+            if($this->_retailRocketHelper->isStockIdEnabled())
+            {
+                $this->generateWithStockId();
+            }
         } catch (Exception $e)
         {
             $this->logger->critical($e);
@@ -279,7 +279,7 @@ class Feed
             if($_store->getConfig('retailrocket/configuration/enable_single_feed'))
             {
                 $this->_categories = $this->getCategoryTree($_store->getRootCategoryId());
-                $this->_products = $this->getProducts($_store->getId());
+                $this->_products = $this->getProducts(null,$_store->getId(),true);
 
                 $this->saveToFile($_store->getId());
 
@@ -379,8 +379,7 @@ class Feed
         if($allAttributes)
         {
             $collection->addAttributeToSelect('*')
-                ->addUrlRewrite()
-                ->addPriceData(null,null);
+                ->addUrlRewrite();
         }
         else
         {
@@ -417,11 +416,6 @@ class Feed
             }
         }
 
-        if($websiteId)
-        {
-            $collection->addPriceData(null,$websiteId);
-        }
-
         if($storeId)
         {
             $collection->setStoreId($storeId);
@@ -440,14 +434,15 @@ class Feed
 
     /**
      * @param $websiteId
+     * @param $storeId
+     * @param false $allAttributes
      * @return array
      */
-    public function getProducts($websiteId)
+    public function getProducts($websiteId,$storeId,$allAttributes = false)
     {
         $result = [];
 
-        $collection = $this->getProductCollection($websiteId);
-
+        $collection = $this->getProductCollection($websiteId,$allAttributes,$storeId);
         $i = 0;
         $notVisibleProductsParents = [];
 
@@ -490,10 +485,12 @@ class Feed
                 $categoryIds = $product->getCategoryIds();
                 $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
 
+                $grupedPrice = $this->_retailRocketHelper->getGroupedPrice($product);
+
                 $result[$i] = [
                     'id' => $product->getId(),
                     'url' => $this->replaceXmlEntities($product->getProductUrl()),
-                    'price' => (float)$product->getMinimalPrice(),
+                    'price' => (float)$grupedPrice,
                     'picture' => $this->getProductImageUrl($product),
                     'name' => $this->replaceXmlEntities($product->getName()),
                     'description' => $product->getData($this->_descriptionAttribute),
@@ -599,7 +596,13 @@ class Feed
 
             if($finalPrice == 0)
             {
-                continue;
+                $now = $this->_timeZone->date()->format('Y-m-d H:i:s');
+                $finalPrice = $price;
+
+                if((!is_null($specialPrice) || $specialPrice != 0) && $specialPrice < $price && $specialFromDate <= $now && $now <= $specialToDate)
+                {
+                    $finalPrice = $specialPrice;
+                }
             }
 
             $productImage = $this->getProductImageUrl($product);
@@ -607,6 +610,11 @@ class Feed
             if($product->getTypeId() == Configurable::TYPE_CODE)
             {
                 $groupId = $product->getId();
+
+                if($finalPrice == 0)
+                {
+                    $finalPrice = $this->_retailRocketHelper->getConfigurablePrice($product);
+                }
 
                 $configurableAttributes = $product->getTypeInstance()->getConfigurableOptions($product);
                 $options = [];
@@ -679,7 +687,7 @@ class Feed
                     $result[$i]['oldprice'] = $price;
                 }
 
-                if(!is_null($minimalPrice) && $minimalPrice < $price)
+                if(!is_null($minimalPrice) && $minimalPrice != 0 && $minimalPrice < $price)
                 {
                     $result[$i]['price'] = $minimalPrice;
                     $result[$i]['oldprice'] = $price;
@@ -687,7 +695,7 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.6) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.7) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
@@ -808,10 +816,12 @@ class Feed
 
                     if(!is_null($finalPrice) && $finalPrice < $price)
                     {
-                        $result[$i]['price'] = $finalPrice;
+                        $result[$i]['price'] = (float)$finalPrice;
                         $result[$i]['oldprice'] = $price;
                     }
                 }
+
+                $i++;
 
                 continue;
             }
@@ -874,7 +884,7 @@ class Feed
                     $result[$i]['oldprice'] = $price;
                 }
 
-                if(!is_null($minimalPrice) && $minimalPrice < $price)
+                if(!is_null($minimalPrice) && $minimalPrice != 0 && $minimalPrice < $price)
                 {
                     $result[$i]['price'] = $minimalPrice;
                     $result[$i]['oldprice'] = $price;
@@ -996,16 +1006,11 @@ class Feed
                         $productAvailable = $productByStockId->getIsSalable();
 
                         $result[$i]['stock'][$webisteCode]['available'] = $productAvailable;
-
-                        $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
-
                         $result[$i]['stock'][$webisteCode]['price'] = (float)$product->getMinimalPrice();
-
                         $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
                         $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId);
                     }
                 }
-
 
                 foreach ($childProducts as $childProduct)
                 {
@@ -1105,7 +1110,7 @@ class Feed
                                 $result[$i]['stock'][$webisteCode]['oldprice'] = $price;
                             }
 
-                            if(!is_null($minimalPrice) && $minimalPrice < $price)
+                            if(!is_null($minimalPrice) && $minimalPrice != 0 && $minimalPrice < $price)
                             {
                                 $result[$i]['stock'][$webisteCode]['price'] = $minimalPrice;
                                 $result[$i]['stock'][$webisteCode]['oldprice'] = $price;
@@ -1161,7 +1166,7 @@ class Feed
                             $result[$i]['stock'][$webisteCode]['oldprice'] = $price;
                         }
 
-                        if(!is_null($minimalPrice) && $minimalPrice < $price)
+                        if(!is_null($minimalPrice) && $minimalPrice != 0 && $minimalPrice < $price)
                         {
                             $result[$i]['stock'][$webisteCode]['price'] = $minimalPrice;
                             $result[$i]['stock'][$webisteCode]['oldprice'] = $price;
@@ -1267,7 +1272,7 @@ class Feed
                     $result[$i]['oldprice'] = $price;
                 }
 
-                if(!is_null($minimalPrice) && $minimalPrice < $price)
+                if(!is_null($minimalPrice) && $minimalPrice != 0 && $minimalPrice < $price)
                 {
                     $result[$i]['price'] = $minimalPrice;
                     $result[$i]['oldprice'] = $price;
@@ -1311,7 +1316,7 @@ class Feed
                             $result[$i]['stock'][$webisteCode]['oldprice'] = $price;
                         }
 
-                        if(!is_null($minimalPrice) && $minimalPrice < $price)
+                        if(!is_null($minimalPrice) && $minimalPrice != 0 && $minimalPrice < $price)
                         {
                             $result[$i]['stock'][$webisteCode]['price'] = $minimalPrice;
                             $result[$i]['stock'][$webisteCode]['oldprice'] = $price;
@@ -1325,7 +1330,7 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.6) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.7) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
@@ -1431,7 +1436,7 @@ class Feed
                         $result[$i]['oldprice'] = $price;
                     }
 
-                    if(!is_null($finalPrice) && $finalPrice < $price)
+                    if(!is_null($finalPrice) && $finalPrice != 0 && $finalPrice < $price)
                     {
                         $result[$i]['price'] = $finalPrice;
                         $result[$i]['oldprice'] = $price;
@@ -1499,7 +1504,7 @@ class Feed
                     $result[$i]['oldprice'] = $price;
                 }
 
-                if(!is_null($minimalPrice) && $minimalPrice < $price)
+                if(!is_null($minimalPrice) && $minimalPrice != 0 && $minimalPrice < $price)
                 {
                     $result[$i]['price'] = $minimalPrice;
                     $result[$i]['oldprice'] = $price;
@@ -1550,7 +1555,7 @@ class Feed
                         $result[$i]['stock'][$webisteCode]['oldprice'] = $price;
                     }
 
-                    if(!is_null($minimalPrice) && $minimalPrice < $price)
+                    if(!is_null($minimalPrice) && $minimalPrice != 0 && $minimalPrice < $price)
                     {
                         $result[$i]['stock'][$webisteCode]['price'] = $minimalPrice;
                         $result[$i]['stock'][$webisteCode]['oldprice'] = $price;
@@ -1580,9 +1585,9 @@ class Feed
 
         if(is_array($productCategoryIds) && count($this->_categories))
         {
-            foreach ($this->_categories as $category)
+            foreach ($productCategoryIds as $productCategoryId)
             {
-                foreach ($productCategoryIds as $productCategoryId)
+                foreach ($this->_categories as $category)
                 {
                     if($productCategoryId == $category['id'])
                     {
@@ -1614,6 +1619,7 @@ class Feed
             $imageUrl = $this->_imageHelper
                 ->init($product, $ProductImageType)
                 ->setImageFile($product->getSmallImage())
+                ->resize(380)
                 ->getUrl();
 
             return $imageUrl;
@@ -1644,7 +1650,7 @@ class Feed
     {
         $now = $this->_timeZone->date()->format('Y-m-d H:i:s');
 
-        if(is_null($specialPrice) || !is_null($specialPrice) == 0)
+        if(is_null($specialPrice) || $specialPrice == 0)
             return false;
 
         if($specialPrice < $price && $specialFromDate <= $now && $now <= $specialToDate)
@@ -1811,6 +1817,7 @@ class Feed
             if($this->_retailRocketHelper->removeSpecialCharsDescription())
             {
                 $product['description'] = $this->_retailRocketHelper->cleanString($product['description']);
+                $product['name'] = $this->_retailRocketHelper->cleanString($product['name']);
             }
 
             if(strlen($product['description']) >= 200)
@@ -1831,11 +1838,21 @@ class Feed
 
             if($product['model'])
             {
+                if($this->_retailRocketHelper->removeSpecialCharsDescription())
+                {
+                    $product['model'] = $this->_retailRocketHelper->cleanString($product['model']);
+                }
+
                 $products .= "<model>{$this->replaceXmlEntities($product['model'])}</model>";
             }
 
             if($product['vendor'])
             {
+                if($this->_retailRocketHelper->removeSpecialCharsDescription())
+                {
+                    $product['vendor'] = $this->_retailRocketHelper->cleanString($product['vendor']);
+                }
+
                 $products .= "<vendor>{$this->replaceXmlEntities($product['vendor'])}</vendor>";
             }
 
@@ -1848,6 +1865,11 @@ class Feed
             {
                 foreach ($product['stock'] as $code => $website)
                 {
+                    if($this->_retailRocketHelper->removeSpecialCharsDescription())
+                    {
+                        $website['name'] = $this->_retailRocketHelper->cleanString($website['name']);
+                    }
+
                     $website['name'] = $this->replaceXmlEntities($website['name']);
 
                     $products .= "<stock id=\"{$code}\">";
@@ -1898,11 +1920,21 @@ class Feed
 
                     if(isset($website['model']))
                     {
+                        if($this->_retailRocketHelper->removeSpecialCharsDescription())
+                        {
+                            $product['model'] = $this->_retailRocketHelper->cleanString($product['model']);
+                        }
+
                         $products .= "<model>{$this->replaceXmlEntities($website['model'])}</model>";
                     }
 
                     if(isset($website['vendor']))
                     {
+                        if($this->_retailRocketHelper->removeSpecialCharsDescription())
+                        {
+                            $product['vendor'] = $this->_retailRocketHelper->cleanString($product['vendor']);
+                        }
+
                         $products .= "<vendor>{$this->replaceXmlEntities($website['vendor'])}</vendor>";
                     }
 

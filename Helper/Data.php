@@ -2,23 +2,27 @@
 
 namespace Improntus\RetailRocket\Helper;
 
+use Magento\ConfigurableProduct\Pricing\Price\LowestPriceOptionsProviderInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Improntus\RetailRocket\Model\Session;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Filesystem;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
+use Magento\Catalog\Model\ProductFactory;
 
 /**
  * Class Data
  *
- * @version 1.0.6
+ * @version 1.0.7
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Helper
@@ -56,6 +60,16 @@ class Data extends AbstractHelper
     protected $_logger;
 
     /**
+     * @var ProductFactory
+     */
+    protected $_productFactory;
+
+    /**
+     * @var TimezoneInterface
+     */
+    protected $_timeZone;
+
+    /**
      * Data constructor.
      * @param Context $context
      * @param Session $session
@@ -63,6 +77,8 @@ class Data extends AbstractHelper
      * @param Filesystem $filesystem
      * @param StoreManagerInterface $storeManager
      * @param LoggerInterface $logger
+     * @param ProductFactory $productFactory
+     * @param TimezoneInterface $timezone
      */
     public function __construct(
         Context $context,
@@ -70,7 +86,9 @@ class Data extends AbstractHelper
         CheckoutSession $checkoutSession,
         Filesystem $filesystem,
         StoreManagerInterface $storeManager,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ProductFactory $productFactory,
+        TimezoneInterface $timezone
     )
     {
         $this->_retailRocketSession = $session;
@@ -78,6 +96,8 @@ class Data extends AbstractHelper
         $this->_fileSystem = $filesystem;
         $this->_storeManager = $storeManager;
         $this->_logger = $logger;
+        $this->_productFactory = $productFactory;
+        $this->_timeZone = $timezone;
 
         parent::__construct($context);
     }
@@ -318,25 +338,109 @@ class Data extends AbstractHelper
             return $result;
         }
 
-        $length = strlen($value);
+        $utf8 = array(
+            '/[áàâãªä]/u'   =>   'a',
+            '/[ÁÀÂÃÄ]/u'    =>   'A',
+            '/[ÍÌÎÏ]/u'     =>   'I',
+            '/[íìîï]/u'     =>   'i',
+            '/[éèêë]/u'     =>   'e',
+            '/[ÉÈÊË]/u'     =>   'E',
+            '/[óòôõºö]/u'   =>   'o',
+            '/[ÓÒÔÕÖ]/u'    =>   'O',
+            '/[úùûü]/u'     =>   'u',
+            '/[ÚÙÛÜ]/u'     =>   'U',
+            '/ç/'           =>   'c',
+            '/Ç/'           =>   'C',
+            '/ñ/'           =>   'n',
+            '/Ñ/'           =>   'N',
+            '/–/'           =>   '-', // UTF-8 hyphen to "normal" hyphen
+            '/[’‘‹›‚]/u'    =>   ' ', // Literally a single quote
+            '/[“”«»„]/u'    =>   ' ', // Double quote
+            '/ /'           =>   ' ', // nonbreaking space (equiv. to 0x160)
+            '/©/'           =>   '',
+            '/®/'           =>   '',
+            '/™/'           =>   ''
+        );
 
-        for ($i=0; $i < $length; $i++)
+        return preg_replace(array_keys($utf8), array_values($utf8), $value);
+    }
+
+    /**
+     * @param $product
+     * @return float
+     */
+    public function getConfigurablePrice($product)
+    {
+        $price = null;
+
+        $simpleProductsIds = $product->getTypeInstance()->getUsedProductIds($product);
+
+        if(count($simpleProductsIds))
         {
-            $current = ord($value{$i});
-            if (($current == 0x9) ||
-                ($current == 0xA) ||
-                ($current == 0xD) ||
-                (($current >= 0x20) && ($current <= 0xD7FF)) ||
-                (($current >= 0xE000) && ($current <= 0xFFFD)) ||
-                (($current >= 0x10000) && ($current <= 0x10FFFF)))
+            $productModel = $this->_productFactory->create();
+            $collection = $productModel->getCollection()
+                ->addAttributeToSelect('*')
+                ->addAttributeToFilter('entity_id',['in'=>implode(',',$simpleProductsIds)]);
+
+            $prices = [];
+
+            foreach ($collection as $_simpleItem)
             {
-                $result .= chr($current);
+                $now = $this->_timeZone->date()->format('Y-m-d H:i:s');
+
+                $specialFromDate = $_simpleItem->getSpecialFromDate();
+                $specialToDate = $_simpleItem->getSpecialToDate();
+                $priceSimple = $_simpleItem->getPrice();
+                $specialPrice = $_simpleItem->getSpecialPrice();
+
+                if(!is_null($specialPrice) && $specialPrice != 0
+                    && $specialPrice < $priceSimple && $specialFromDate <= $now && $now <= $specialToDate)
+                {
+                    $prices[] = $specialPrice;
+                }
+                else{
+                    $prices[] = $priceSimple;
+                }
             }
-            else
-            {
-                $result .= ' ';
-            }
+
+            $price = min($prices);
         }
-        return $result;
+
+        return (float)$price;
+    }
+
+    public function getGroupedPrice($product)
+    {
+        $price = null;
+
+        $simpleProducts = $product->getTypeInstance()->getAssociatedProducts($product);
+
+        if(count($simpleProducts))
+        {
+            $prices = [];
+
+            foreach ($simpleProducts as $_simpleItem)
+            {
+                $now = $this->_timeZone->date()->format('Y-m-d H:i:s');
+
+                $specialFromDate = $_simpleItem->getSpecialFromDate();
+                $specialToDate = $_simpleItem->getSpecialToDate();
+                $priceSimple = $_simpleItem->getPrice();
+                $specialPrice = $_simpleItem->getSpecialPrice();
+
+                if(!is_null($specialPrice) && $specialPrice != 0
+                    && $specialPrice < $priceSimple && $specialFromDate <= $now && $now <= $specialToDate)
+                {
+                    $prices[] = $specialPrice;
+                }
+                else{
+                    $prices[] = $priceSimple;
+                }
+            }
+
+            $price = min($prices);
+        }
+
+        return (float)$price;
     }
 }

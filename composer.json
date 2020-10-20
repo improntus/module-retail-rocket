@@ -3,7 +3,7 @@
   "license": "GPL-2.0-only / GPL-2.0-or-later",
   "description": "RetailRocket Integration",
   "type": "magento2-module",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "authors": [
     {
       "name": "Mauro Maximiliano Martinez",

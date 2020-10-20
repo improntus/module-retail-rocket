@@ -1,6 +1,14 @@
 CHANGELOG
 ---------
 
+### 1.0.7
+
+- Added acl permissions
+- Fixed configurable items in xml feed
+- The method of getting prices has been modified. "addPriceData" is not used anymore 
+- Now small image in feed is set to 380px
+- Fixed category ids in feed when a product has disabled categories   
+
 ### 1.0.6
 
 - Now, if store code is added to urls it is set in stockId mode
