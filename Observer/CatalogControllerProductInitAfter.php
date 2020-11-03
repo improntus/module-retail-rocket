@@ -69,14 +69,12 @@ class CatalogControllerProductInitAfter implements ObserverInterface
 
 		if($product->getTypeId() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE)
 		{
-            $simpleProductIds = $product->getTypeInstance()->getUsedProductIds($product);
-            $productIds = array_merge($productIds,$simpleProductIds);
+            $productIds = $product->getTypeInstance()->getUsedProductIds($product); //only send simple item ids (1.0.8)
         }
 
         if($product->getTypeId() == \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE)
         {
-            $childProductIds = $product->getTypeInstance()->getAssociatedProductIds($product);
-            $productIds = array_merge($productIds,$childProductIds);
+            $productIds = $product->getTypeInstance()->getAssociatedProductIds($product); //only send simple item ids (1.0.8)
         }
 
 		$data = [

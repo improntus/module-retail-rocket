@@ -653,7 +653,7 @@ class Feed
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
                     'categories' => $lastCategoryId,
-                    'group_id' => null,
+                    'group_id' => $product->getId(),
                     'params' => $params,
                     'visibility' => $product->getVisibility()
                 ];
