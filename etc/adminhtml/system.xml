@@ -60,6 +60,10 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>If not, the customer must click "I would like to receive exclussive offers." in checkout success page</comment>
                 </field>
+                <field id="remove_pub" translate="label" type="select" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Remove "pub" from images url</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
                 <field id="enable_single_feed" translate="label" type="select" sortOrder="38" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Single XML Feed (only by group id)</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>

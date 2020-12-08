@@ -82,8 +82,8 @@ class Generate extends Action
             }
         } catch (Exception $e) {
             $message = __('Retail Rocket feed generation failed.');
-            $this->messageManager->addSuccessMessage($message);
-            $this->messageManager->addSuccessMessage($e->getMessage());
+            $this->messageManager->addErrorMessage($message);
+            $this->messageManager->addErrorMessage($e->getMessage());
         }
         
         /** @var Redirect $resultRedirect */

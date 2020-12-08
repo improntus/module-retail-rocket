@@ -192,6 +192,14 @@ class Data extends AbstractHelper
     }
 
     /**
+     * @return string
+     */
+    public function getRemovePub()
+    {
+        return $this->scopeConfig->getValue('retailrocket/configuration/remove_pub', ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
      * @return string|null
      */
     public function getProductCreationStartDate()
@@ -381,6 +389,7 @@ class Data extends AbstractHelper
             $collection = $productModel->getCollection()
                 ->addAttributeToSelect('*')
                 ->addAttributeToFilter('entity_id',['in'=>implode(',',$simpleProductsIds)]);
+            $collection->addWebsiteFilter([$product->getStore()->getWebsiteId()]);
 
             $prices = [];
 
@@ -442,5 +451,31 @@ class Data extends AbstractHelper
         }
 
         return (float)$price;
+    }
+
+    /**
+     * @param $productId
+     * @param $websiteId
+     * @return float
+     */
+    public function getFinalPriceByStore($productId, $websiteId)
+    {
+        $product = $this->_productFactory->create()
+            ->getCollection()
+            ->addAttributeToSelect('price')
+            ->addAttributeToSelect('final_price')
+            ->addPriceData(null, $websiteId)
+            ->addWebsiteFilter($websiteId)
+            ->addAttributeToFilter('entity_id',['eq'=>$productId]);
+
+        if($product->getSize())
+        {
+            $finalPrice = $product->getFirstItem();
+            $finalPrice = $finalPrice->getData('final_price');
+
+            return (float)$finalPrice;
+        }
+
+        return 0.0;
     }
 }
