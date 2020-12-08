@@ -32,7 +32,7 @@ use Magento\Catalog\Helper\Image;
 /**
  * Class Feed
  *
- * @version 1.0.7
+ * @version 1.0.8
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
@@ -700,7 +700,7 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.7) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.8) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))
@@ -1329,7 +1329,7 @@ class Feed
 
                 $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
-                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.7) */
+                /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.8) */
                 if(isset($notVisibleProductsParents[$product->getId()]))
                 {
                     if(count($simpleProducts) != count($notVisibleProductsParents[$product->getId()]))

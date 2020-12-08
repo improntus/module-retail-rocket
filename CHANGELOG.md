@@ -1,6 +1,12 @@
 CHANGELOG
 ---------
 
+### 1.0.8
+
+- Added "Remove pub from image url" possibility
+- Now, configurable products are not sent in "stock id mode". It only sends simple products using its parent url 
+- The "stock id mode" prices had been modified 
+
 ### 1.0.7
 
 - Added acl permissions

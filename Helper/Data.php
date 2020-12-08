@@ -22,7 +22,7 @@ use Magento\Catalog\Model\ProductFactory;
 /**
  * Class Data
  *
- * @version 1.0.7
+ * @version 1.0.8
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Helper
