@@ -1,5 +1,5 @@
 {
-  "name": "improntus/retailrocket",
+  "name": "improntus/module-retail-rocket",
   "license": "GPL-2.0-only / GPL-2.0-or-later",
   "description": "RetailRocket Integration",
   "type": "magento2-module",
