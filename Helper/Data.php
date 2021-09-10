@@ -234,6 +234,28 @@ class Data extends AbstractHelper
     }
 
     /**
+     * @return bool
+     */
+    public function useParentNameSimple()
+    {
+        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/use_parent_name_simple');
+    }
+
+    /**
+     * @return false|mixed|string[]
+     */
+    public function getExcludedCategories()
+    {
+        $excludedCategories = $this->scopeConfig->getValue('retailrocket/configuration/exclude_categories');
+
+        if($excludedCategories){
+            $excludedCategories = explode(',',$excludedCategories);
+        }
+
+        return $excludedCategories;
+    }
+
+    /**
      * @return Session
      */
     public function getSession()

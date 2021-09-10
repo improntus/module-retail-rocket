@@ -1,13 +1,13 @@
 {
-  "name": "improntus/retailrocket",
+  "name": "improntus/module-retail-rocket",
   "license": "GPL-2.0-only / GPL-2.0-or-later",
-  "description": "RetailRocket Integration",
+  "description": "Retail Rocket Integration",
   "type": "magento2-module",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "authors": [
     {
       "name": "Mauro Maximiliano Martinez",
-      "email": "support@improntus.com",
+      "email": "contact@improntus.com",
       "homepage": "http://www.improntus.com"
     }
   ],

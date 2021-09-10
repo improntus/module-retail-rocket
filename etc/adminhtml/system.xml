@@ -26,27 +26,27 @@
                     <label>Enabled</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="partner_id" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="partner_id" translate="label comment" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Partner Id</label>
                     <validate>required-entry</validate>
                     <comment>Your RetailRocket partner id</comment>
                 </field>
-                <field id="description_attribute" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="description_attribute" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Description Attribute</label>
                     <comment>Attribute to send as "description"</comment>
                     <source_model>Improntus\RetailRocket\Model\Config\Source\ExtraAttributes</source_model>
                 </field>
-                <field id="model_attribute" translate="label" type="select" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="model_attribute" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Model Attribute</label>
                     <comment>Attribute to send as "model"</comment>
                     <source_model>Improntus\RetailRocket\Model\Config\Source\ExtraAttributes</source_model>
                 </field>
-                <field id="vendor_attribute" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="vendor_attribute" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Vendor attribute</label>
                     <comment>Attribute to send as "vendor"</comment>
                     <source_model>Improntus\RetailRocket\Model\Config\Source\ExtraAttributes</source_model>
                 </field>
-                <field id="extra_attribute" translate="label" type="multiselect" sortOrder="25" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="extra_attribute" translate="label comment" type="multiselect" sortOrder="25" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Extra attributes</label>
                     <comment>Extra attributes to use</comment>
                     <source_model>Improntus\RetailRocket\Model\Config\Source\ExtraAttributes</source_model>
@@ -55,12 +55,16 @@
                     <label>Privacy policies URL</label>
                     <validate>required-entry</validate>
                 </field>
-                <field id="always_subscribe_customer_email" translate="label" type="select" sortOrder="35" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="always_subscribe_customer_email" translate="label comment" type="select" sortOrder="35" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Always subscribe customer email in checkout success page</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>If not, the customer must click "I would like to receive exclussive offers." in checkout success page</comment>
                 </field>
-                <field id="remove_pub" translate="label" type="select" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="use_parent_name_simple" translate="label" type="select" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Use configurable name in child products</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="remove_pub" translate="label" type="select" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Remove "pub" from images url</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
@@ -72,7 +76,7 @@
                     <label>Remove special chars in description attribute</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="product_creation_start_date" translate="label" type="date" sortOrder="42" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="product_creation_start_date" translate="label comment" type="date" sortOrder="42" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Product creation start date filter</label>
                     <comment>Optional. It must be set in format YYYY-MM-DD</comment>
                     <frontend_model>Improntus\RetailRocket\Block\Adminhtml\System\Config\Form\Date</frontend_model>
@@ -82,7 +86,13 @@
                     <comment><![CDATA[<strong>Only for advanced users</strong>: Cron expression used to trigger product feed generation process. By default it runs once by hour (0 * * * *)]]></comment>
                     <backend_model>Improntus\RetailRocket\Model\Config\Cron</backend_model>
                 </field>
-                <group id="stockid" translate="label" type="text" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="exclude_categories" translate="label comment" type="multiselect" sortOrder="44" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Exclude categories from feed</label>
+                    <comment><![CDATA[Selected categories will not be sent to feed]]></comment>
+                    <source_model>Improntus\RetailRocket\Model\Config\Source\CategoryTree</source_model>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <group id="stockid" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Stock Id Mode</label>
                     <field id="enable" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Enable StockId Mode</label>
@@ -95,14 +105,18 @@
                         <comment>Select all root categories you want to use in feed</comment>
                     </field>
                 </group>
-                <field id="links" translate="label tooltip" type="button" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="links" translate="label tooltip" type="button" sortOrder="55" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Click "Generate Retail Rocket Feed" button below. After the process is done every store you have in Magento will have one xml feed.</label>
                     <frontend_model>Improntus\RetailRocket\Block\Adminhtml\Links</frontend_model>
                 </field>
-                <field id="generate" translate="label" type="button" sortOrder="55" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="generate" translate="label" type="button" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Generate Retail Rocket Feed Manually</label>
                     <frontend_model>Improntus\RetailRocket\Block\Adminhtml\Button\Generate</frontend_model>
                     <comment>Xml feed is generated automatically every 1 hour. You don't need generate it every time.</comment>
+                </field>
+                <field id="cron_execution" translate="label" type="button" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Last cron executions</label>
+                    <frontend_model>Improntus\RetailRocket\Block\Adminhtml\CronExecution</frontend_model>
                 </field>
             </group>
         </section>

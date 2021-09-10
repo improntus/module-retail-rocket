@@ -4,9 +4,9 @@ namespace Improntus\RetailRocket\Observer;
 
 use Improntus\RetailRocket\Helper\Data;
 use Magento\Catalog\Model\Product;
-use Magento\Checkout\Model\Session;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable;
 
 /**
  * Class CatalogControllerProductInitAfter
@@ -24,29 +24,30 @@ class CatalogControllerProductInitAfter implements ObserverInterface
 	protected $_retailRocketHelper;
 
     /**
-     * @var Session
-     */
-	protected $_checkoutSession;
-
-    /**
      * @var \Improntus\RetailRocket\Model\Session
      */
 	protected $_retailRocketSession;
 
     /**
+     * @var Configurable
+     */
+	protected $_configurable;
+
+    /**
      * CatalogControllerProductInitAfter constructor.
+     *
      * @param \Improntus\RetailRocket\Model\Session $retailRocketSession
-     * @param Session $checkoutSession
-     * @param Data $helper
+     * @param Data                                  $helper
+     * @param Configurable                          $configurable
      */
 	public function __construct(
 		\Improntus\RetailRocket\Model\Session $retailRocketSession,
-		Session $checkoutSession,
-		Data $helper
+		Data $helper,
+        Configurable $configurable
 	) {
 		$this->_retailRocketSession = $retailRocketSession;
-		$this->_checkoutSession = $checkoutSession;
 		$this->_retailRocketHelper = $helper;
+		$this->_configurable = $configurable;
 	}
 
     /**
@@ -65,11 +66,13 @@ class CatalogControllerProductInitAfter implements ObserverInterface
 		}
 
         $productIds = [];
-        $productIds[] = $product->getId();
 
 		if($product->getTypeId() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE)
 		{
-            $productIds = $product->getTypeInstance()->getUsedProductIds($product); //only send simple item ids (1.0.8)
+            //only send simple item ids (1.0.8)
+		    //send all simple products from configurable (1.0.9)
+            $simpleProducts = $this->_configurable->getChildrenIds($product->getId());
+            isset($simpleProducts[0]) ? $productIds = $simpleProducts[0] : [];
         }
 
         if($product->getTypeId() == \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE)

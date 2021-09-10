@@ -338,6 +338,11 @@ class Feed
 
         foreach ($categoryTree as $category)
         {
+            $excludedCategories = $this->_retailRocketHelper->getExcludedCategories();
+
+            if(!is_null($excludedCategories) && in_array($category->getId(),$excludedCategories))
+                continue;
+
             $result[] = [
                 'id' => $category->getId(),
                 'name' => $this->replaceXmlEntities($category->getName()),
@@ -488,7 +493,22 @@ class Feed
                 }
 
                 $categoryIds = $product->getCategoryIds();
-                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+
+                $lastCategoryId = null;
+
+                $categoryIdsQty = count($categoryIds);
+
+                if(is_array($categoryIds) && $categoryIdsQty)
+                {
+                    if($categoryIdsQty == 1)
+                    {
+                        $lastCategoryId = [end($categoryIds)];
+                    }
+                    if ($categoryIdsQty >= 2)
+                    {
+                        $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
+                    }
+                }
 
                 $grupedPrice = $this->_retailRocketHelper->getGroupedPrice($product);
 
@@ -496,7 +516,7 @@ class Feed
                     'id' => $product->getId(),
                     'url' => $this->replaceXmlEntities($product->getProductUrl()),
                     'price' => (float)$grupedPrice,
-                    'picture' => $this->getProductImageUrl($product),
+                    'picture' => $this->replaceXmlEntities($this->getProductImageUrl($product)),
                     'name' => $this->replaceXmlEntities($product->getName()),
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
@@ -548,7 +568,21 @@ class Feed
                     }
 
                     $categoryIds = $this->getAvailableCategoryIds($childProduct->getCategoryIds());
-                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+                    $lastCategoryId = null;
+
+                    $categoryIdsQty = count($categoryIds);
+
+                    if(is_array($categoryIds) && $categoryIdsQty)
+                    {
+                        if($categoryIdsQty == 1)
+                        {
+                            $lastCategoryId = [end($categoryIds)];
+                        }
+                        if ($categoryIdsQty >= 2)
+                        {
+                            $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
+                        }
+                    }
 
                     $result[$i] = [
                         'id' => $childProduct->getId(),
@@ -646,15 +680,31 @@ class Feed
                 }
 
                 $categoryIds = $this->getAvailableCategoryIds($product->getCategoryIds());
+                $lastCategoryId = null;
 
-                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+                $categoryIdsQty = count($categoryIds);
 
+                if(is_array($categoryIds) && $categoryIdsQty)
+                {
+                    if($categoryIdsQty == 1)
+                    {
+                        $lastCategoryId = [end($categoryIds)];
+                    }
+                    if ($categoryIdsQty >= 2)
+                    {
+                        $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
+                    }
+                }
+                $configurableUrl = $product->getProductUrl();
+                $configurableName = $product->getName();
+
+                //Configurable item
                 $result[$i] = [
                     'id' => $product->getId(),
-                    'url' => $product->getProductUrl(),
+                    'url' => $configurableUrl,
                     'price' => (float)$finalPrice,
                     'picture' => $productImage,
-                    'name' => $product->getName(),
+                    'name' => $configurableName,
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
                     'categories' => $lastCategoryId,
@@ -757,8 +807,9 @@ class Feed
                         }
                     }
 
-                    $categoryIds = $this->getAvailableCategoryIds($simpleProduct->getCategoryIds());
-                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+                    //PONER UNA LOGICA Y OPCION POR SI SE QUIERE USAR LA CATEGORIA DEL CONFIGURABLE PADRE Y NO LOS SIMPLES
+//                    $categoryIds = $this->getAvailableCategoryIds($simpleProduct->getCategoryIds());
+//                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
 
                     if($simpleProduct->getTypeId() == Type::TYPE_SIMPLE)
                     {
@@ -776,12 +827,13 @@ class Feed
                     $price = (float)$simpleProduct->getPrice();
                     $finalPrice = (float)$simpleProduct->getFinalPrice();
 
+                    //Simple item
                     $result[$i] = [
                         'id' => $simpleProduct->getId(),
-                        'url' => $simpleProduct->getProductUrl(),
+                        'url' => $configurableUrl, // 1.0.9 use configurable url for simple products
                         'price' => $finalPrice,
                         'picture' => $this->getProductImageUrl($simpleProduct),
-                        'name' => $simpleProduct->getName(),
+                        'name' => $this->_retailRocketHelper->useParentNameSimple() ? $configurableName : $simpleProduct->getName(), // 1.0.9
                         'description' => $product->getData($this->_descriptionAttribute),
                         'available' => $productAvailable,
                         'categories' => $lastCategoryId,
@@ -845,7 +897,21 @@ class Feed
                 }
 
                 $categoryIds = $this->getAvailableCategoryIds($product->getCategoryIds());
-                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+                $lastCategoryId = null;
+
+                $categoryIdsQty = count($categoryIds);
+
+                if(is_array($categoryIds) && $categoryIdsQty)
+                {
+                    if($categoryIdsQty == 1)
+                    {
+                        $lastCategoryId = [end($categoryIds)];
+                    }
+                    if ($categoryIdsQty >= 2)
+                    {
+                        $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
+                    }
+                }
 
                 $result[$i] = [
                     'id' => $product->getId(),
@@ -956,7 +1022,21 @@ class Feed
                 }
 
                 $categoryIds = $product->getCategoryIds();
-                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+                $lastCategoryId = null;
+
+                $categoryIdsQty = count($categoryIds);
+
+                if(is_array($categoryIds) && $categoryIdsQty)
+                {
+                    if($categoryIdsQty == 1)
+                    {
+                        $lastCategoryId = [end($categoryIds)];
+                    }
+                    if ($categoryIdsQty >= 2)
+                    {
+                        $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
+                    }
+                }
 
                 $grupedPrice = $this->_retailRocketHelper->getGroupedPrice($product);
 
@@ -1038,7 +1118,20 @@ class Feed
                     }
 
                     $categoryIds = $childProduct->getCategoryIds();
-                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+                    $lastCategoryId = null;
+
+                    $categoryIdsQty = count($categoryIds);
+                    if(is_array($categoryIds) && $categoryIdsQty)
+                    {
+                        if($categoryIdsQty == 1)
+                        {
+                            $lastCategoryId = [end($categoryIds)];
+                        }
+                        if ($categoryIdsQty >= 2)
+                        {
+                            $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
+                        }
+                    }
 
                     $result[$i] = [
                         'id' => $childProduct->getId(),
@@ -1236,7 +1329,21 @@ class Feed
                 }
 
                 $categoryIds = $product->getCategoryIds();
-                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+                $lastCategoryId = null;
+
+                $categoryIdsQty = count($categoryIds);
+
+                if(is_array($categoryIds) && $categoryIdsQty)
+                {
+                    if($categoryIdsQty == 1)
+                    {
+                        $lastCategoryId = [end($categoryIds)];
+                    }
+                    if ($categoryIdsQty >= 2)
+                    {
+                        $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
+                    }
+                }
                 $configurableUrl = $product->getUrlInStore();
 
                 $result[$i] = [
@@ -1359,6 +1466,7 @@ class Feed
                     }
                 }
 
+                //Hijos del configurable
                 foreach ($simpleProducts as $simpleProduct)
                 {
                     $i++;
@@ -1387,14 +1495,28 @@ class Feed
                     }
 
                     $categoryIds = $simpleProduct->getCategoryIds();
-                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+                    $lastCategoryId = null;
+
+                    $categoryIdsQty = count($categoryIds);
+
+                    if(is_array($categoryIds) && $categoryIdsQty)
+                    {
+                        if($categoryIdsQty == 1)
+                        {
+                            $lastCategoryId = [end($categoryIds)];
+                        }
+                        if ($categoryIdsQty >= 2)
+                        {
+                            $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
+                        }
+                    }
 
                     $price = (float)$simpleProduct->getPrice();
                     $finalPrice = (float)$simpleProduct->getFinalPrice();
 
                     $result[$i] = [
                         'id' => $simpleProduct->getId(),
-                        'url' => $simpleProduct->getUrlInStore(),
+                        'url' => $configurableUrl, //Los productos simples llevan la url del configurable 03-05-2021
                         'price' => $finalPrice,
                         'picture' => $this->getProductImageUrl($simpleProduct),
                         'name' => $simpleProduct->getName(),
@@ -1506,7 +1628,21 @@ class Feed
                 }
 
                 $categoryIds = $product->getCategoryIds();
-                $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
+                $lastCategoryId = null;
+
+                $categoryIdsQty = count($categoryIds);
+
+                if(is_array($categoryIds) && $categoryIdsQty)
+                {
+                    if($categoryIdsQty == 1)
+                    {
+                        $lastCategoryId = [end($categoryIds)];
+                    }
+                    if ($categoryIdsQty >= 2)
+                    {
+                        $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
+                    }
+                }
 
                 if($finalPrice == 0)
                 {
@@ -1650,15 +1786,22 @@ class Feed
 
     /**
      * @param $product
+     * @param null $parentImage
      * @return string
      */
-    public function getProductImageUrl($product)
+    public function getProductImageUrl($product, $parentImage = null)
     {
-        if(!$product->getSmallImage())
+        if(!$product->getSmallImage() || $product->getSmallImage() == 'no_selection')
         {
-            return $this->_viewAssetRepo->getUrl(
-                'Magento_Catalog::images/product/placeholder/image.jpg'
-            );
+            if($parentImage)
+            {
+                return $parentImage;
+            }else{
+                return $this->_viewAssetRepo->getUrlWithParams(
+                    'Magento_Catalog::images/product/placeholder/image.jpg' ,
+                    ['area' => 'frontend']
+                );
+            }
         }
         else
         {
@@ -1853,7 +1996,10 @@ class Feed
 
             if(!is_null($product['categories']))
             {
-                $products .= "<categoryId>{$product['categories']}</categoryId>";
+                foreach ($product['categories'] as $_cat)
+                {
+                    $products .= "<categoryId>{$_cat}</categoryId>";
+                }
             }
 
             $products .= "<picture>{$product['picture']}</picture>";
@@ -1883,6 +2029,9 @@ class Feed
             {
                 $product['description'] = substr($product['description'],0,190);
                 $product['description'] = $this->replaceXmlEntities($product['description']);
+
+                //1.0.9
+                $product['description'] = substr_replace($product['description'],'...',-3,3);
             }
 
             $product['description'] = $this->replaceXmlEntities($product['description']);

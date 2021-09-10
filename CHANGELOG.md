@@ -1,5 +1,15 @@
 CHANGELOG
 ---------
+### 1.0.9
+
+- Now selected categories can be excluded from feed
+- Added cron executions log for feed 
+- Added option to use configurable name in child products (simple product)
+- Now if simple products have no images, configurable image will be use instead
+- Now the last 2 categories of product are sent in feed
+- Now if simple product has not image, it uses its parent product image
+- Simple products uses parent url when it is not visible
+- Fix bug in product page with "groupView" event: now all simple ids are sent always
 
 ### 1.0.8
 

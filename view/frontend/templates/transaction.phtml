@@ -1,6 +1,7 @@
 <?php
 
 /** @var Magento\Sales\Model\Order $order */
+/** @var Improntus\RetailRocket\Block\Tracker $block */
 $order = $block->getOrder();
 
 //Failsafe for bad order id
@@ -10,12 +11,23 @@ if (!$order) {
 
 $orderItems = [];
 
-foreach ($order->getAllVisibleItems() as $allVisibleItem)
+foreach ($order->getAllItems() as $item)
 {
+    if($item->getProductType() == 'configurable')
+        continue;
+
+    if($item->getParentItem())
+    {
+        $itemPrice = $item->getParentItem()->getPrice();
+    }
+    else{
+        $itemPrice = $item->getPrice();
+    }
+
     $orderItems[] = [
-            'id'  => (int)$allVisibleItem->getProduct()->getId(),
-            'qnt' => (int)$allVisibleItem->getQtyOrdered(),
-            'price' => (int)$allVisibleItem->getPrice()
+            'id'  => (int)$item->getProduct()->getId(),
+            'qnt' => (int)$item->getQtyOrdered(),
+            'price' => (int)$itemPrice
     ];
 }
 
