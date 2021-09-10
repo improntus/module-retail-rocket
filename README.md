@@ -5,7 +5,7 @@
 
 ### Developement mode
 ```
-1. composer require improntus/retailrocket:"dev-master"
+1. composer require improntus/module-retail-rocket
 2. php bin/magento module:enable Improntus_RetailRocket --clear-static-content
 3. php bin/magento setup:upgrade
 4. rm -rf var/di var/view_preprocessed var/cache generated/*
@@ -14,7 +14,7 @@
 
 ### Production mode
 ```
-1. composer require improntus/retailrocket:"dev-master"
+1. composer require improntus/module-retail-rocket
 2. php bin/magento module:enable Improntus_RetailRocket --clear-static-content
 3. php bin/magento setup:upgrade
 4. rm -rf var/di var/view_preprocessed var/cache generated/*
