@@ -32,7 +32,7 @@ use Magento\Catalog\Helper\Image;
 /**
  * Class Feed
  *
- * @version 1.0.8
+ * @version 1.0.9
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
