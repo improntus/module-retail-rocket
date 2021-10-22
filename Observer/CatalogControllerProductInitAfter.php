@@ -66,6 +66,7 @@ class CatalogControllerProductInitAfter implements ObserverInterface
 		}
 
         $productIds = [];
+        $productIds[] = $product->getId();
 
 		if($product->getTypeId() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE)
 		{
