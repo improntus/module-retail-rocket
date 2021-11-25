@@ -36,6 +36,11 @@
                     <comment>Attribute to send as "description"</comment>
                     <source_model>Improntus\RetailRocket\Model\Config\Source\ExtraAttributes</source_model>
                 </field>
+                <field id="description_attribute_max_length" translate="label comment" type="text" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Description Attribute max length</label>
+                    <comment>Use 0 to disable</comment>
+                    <validate>validate-number validate-zero-or-greater</validate>
+                </field>
                 <field id="model_attribute" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Model Attribute</label>
                     <comment>Attribute to send as "model"</comment>

@@ -1,5 +1,13 @@
 CHANGELOG
 ---------
+
+### 1.0.10
+
+- Added Magento Csp compatibility  
+- Added max length in description attribute
+- Fixed bug with simple products in product page
+- Fixed special price bug in xml feed
+
 ### 1.0.9
 
 - Now selected categories can be excluded from feed

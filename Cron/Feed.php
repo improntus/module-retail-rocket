@@ -1844,15 +1844,23 @@ class Feed
      */
     public function applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate)
     {
-        $now = $this->_timeZone->date()->format('Y-m-d H:i:s');
+        $now = strtotime($this->_timeZone->date()->format('Y-m-d H:i:s'));
+
+        $specialPrice = (float) $specialPrice;
+        $price = (float) $price;
 
         if(is_null($specialPrice) || $specialPrice == 0)
             return false;
 
-        //@TODO
-        if($specialPrice < $price) // && $specialFromDate <= $now && $now <= $specialToDate)
+        if($specialPrice < $price)
         {
-            return true;
+            if ((is_null($specialFromDate) &&is_null($specialToDate))
+                || ($now >= strtotime($specialFromDate) && is_null($specialToDate))
+                || ($now <= strtotime($specialToDate) &&is_null($specialFromDate))
+                || ($now >= strtotime($specialFromDate) && $now <= strtotime($specialToDate)))
+            {
+                return true;
+            }
         }
         else{
             return false;
@@ -2029,6 +2037,13 @@ class Feed
             {
                 $product['description'] = substr($product['description'],0,190);
                 $product['description'] = $this->replaceXmlEntities($product['description']);
+
+                //1.0.10 max length added
+                $descriptionMaxLength = $this->_retailRocketHelper->getDescriptionAttributeMaxLength();
+                if($descriptionMaxLength > 0 && strlen($product['description']) > $descriptionMaxLength)
+                {
+                    $product['description'] = substr($product['description'],0,$descriptionMaxLength);
+                }
 
                 //1.0.9
                 $product['description'] = substr_replace($product['description'],'...',-3,3);

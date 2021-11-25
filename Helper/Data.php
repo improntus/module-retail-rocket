@@ -256,6 +256,14 @@ class Data extends AbstractHelper
     }
 
     /**
+     * @return int
+     */
+    public function getDescriptionAttributeMaxLength()
+    {
+        return (int)$this->scopeConfig->getValue('retailrocket/configuration/description_attribute_max_length');
+    }
+
+    /**
      * @return Session
      */
     public function getSession()
@@ -434,7 +442,8 @@ class Data extends AbstractHelper
                 }
             }
 
-            $price = min($prices);
+            //Validation in version 1.0.10
+            $price = is_array($prices) ? min($prices) : 0;
         }
 
         return (float)$price;
