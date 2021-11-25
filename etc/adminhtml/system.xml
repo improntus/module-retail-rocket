@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /**
- * @version 1.0.9
+ * @version 1.0.10
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus_RetailRocket
@@ -41,6 +41,8 @@
                     <comment>Use 0 to disable</comment>
                     <validate>validate-number validate-zero-or-greater</validate>
                 </field>
+
+                <!-- habilitar Server Post Request -->
                 <field id="model_attribute" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Model Attribute</label>
                     <comment>Attribute to send as "model"</comment>
