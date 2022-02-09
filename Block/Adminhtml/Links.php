@@ -9,7 +9,7 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
 /**
  * Class Links
  *
- * @version 1.0.10
+ * @version 1.0.11
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block\Adminhtml
@@ -41,19 +41,19 @@ class Links extends Field
     public function _getElementHtml(AbstractElement $element)
     {
         $element = null;
-        
+
         $links = $this->_retailRocketHelper->getRetailRocketFeedLinks();
-        
+
         $html = '<div>';
-        
+
         foreach ($links as $_link)
         {
             $html .= "<p><span>{$_link['store_name']}:</span><br />";
             $html .= "<a href='{$_link['link']}' download='{$_link['file']}' target='_blank'>{$_link['link']}</a></p>";
         }
-        
+
         $html .= '</div>';
-        
+
         return $html;
     }
 }

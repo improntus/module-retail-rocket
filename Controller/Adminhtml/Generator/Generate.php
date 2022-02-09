@@ -13,7 +13,7 @@ use Magento\Framework\Controller\ResultInterface;
 /**
  * Class Generate
  *
- * @version 1.0.10
+ * @version 1.0.11
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Apptrian\FacebookCatalog\Controller\Adminhtml\Generator
@@ -53,7 +53,7 @@ class Generate extends Action
     public function execute()
     {
         set_time_limit(18000);
-        
+
         try {
             $feedGenerated = false;
 
@@ -85,10 +85,10 @@ class Generate extends Action
             $this->messageManager->addErrorMessage($message);
             $this->messageManager->addErrorMessage($e->getMessage());
         }
-        
+
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultRedirectFactory->create();
-        
+
         return $resultRedirect->setPath(
             'adminhtml/system_config/edit',
             ['section' => 'retailrocket']

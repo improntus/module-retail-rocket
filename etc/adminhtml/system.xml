@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /**
- * @version 1.0.10
+ * @version 1.0.11
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus_RetailRocket
@@ -69,6 +69,10 @@
                 </field>
                 <field id="use_parent_name_simple" translate="label" type="select" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Use configurable name in child products</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="use_parent_image_simple" translate="label" type="select" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Use parent image in simple products</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="remove_pub" translate="label" type="select" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /**
- * @version 1.0.10
+ * @version 1.0.11
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus_RetailRocket
@@ -12,8 +12,8 @@
         <referenceContainer name="after.body.start">
             <block class="Improntus\RetailRocket\Block\Tracker" name="improntus_retailrocket_transaction" template="Improntus_RetailRocket::transaction.phtml"/>
         </referenceContainer>
-        <referenceBlock name="content">
+        <referenceContainer name="content">
             <block class="Improntus\RetailRocket\Block\Tracker" name="improntus_retailrocket_customer_email_transaction" after="checkout.success" template="Improntus_RetailRocket::customer_email_checkout.phtml"/>
-        </referenceBlock>
+        </referenceContainer>
     </body>
 </page>

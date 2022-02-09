@@ -1,5 +1,11 @@
 CHANGELOG
 ---------
+### 1.0.11
+
+- Added option "Use parent image in simple products"
+- Added "addStoreFilter()" in product collection
+- Code refactoring
+- "Checkout success" layout update
 
 ### 1.0.10
 

@@ -18,7 +18,6 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Filesystem\File\Write;
 use Magento\Framework\UrlInterface;
-use Magento\Framework\View\Asset\Repository;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -32,7 +31,7 @@ use Magento\Catalog\Helper\Image;
 /**
  * Class Feed
  *
- * @version 1.0.10
+ * @version 1.0.11
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Cron
@@ -97,11 +96,6 @@ class Feed
     private $_categories = [];
 
     /**
-     * @var Repository
-     */
-    protected $_viewAssetRepo;
-
-    /**
      * @var string
      */
     protected $_descriptionAttribute;
@@ -142,26 +136,20 @@ class Feed
     protected $_productRepository;
 
     /**
-     * @var Image
-     */
-    protected $_imageHelper;
-
-    /**
      * Feed constructor.
-     * @param Data $helper
-     * @param LoggerInterface $logger
-     * @param Filesystem $filesystem
-     * @param StoreManagerInterface $storeManager
-     * @param CategoryFactory $categoryFactory
-     * @param ProductFactory $productFactory
-     * @param TimezoneInterface $timezone
-     * @param File $driverFile
-     * @param Repository $viewAssetRepo
-     * @param AttributeCollection $attributeCollection
-     * @param StockRegistryInterface $stockRegistry
-     * @param ConfigurableProduct $configurable
+     *
+     * @param Data                       $helper
+     * @param LoggerInterface            $logger
+     * @param Filesystem                 $filesystem
+     * @param StoreManagerInterface      $storeManager
+     * @param CategoryFactory            $categoryFactory
+     * @param ProductFactory             $productFactory
+     * @param TimezoneInterface          $timezone
+     * @param File                       $driverFile
+     * @param AttributeCollection        $attributeCollection
+     * @param StockRegistryInterface     $stockRegistry
+     * @param ConfigurableProduct        $configurable
      * @param ProductRepositoryInterface $productRepository
-     * @param Image $imageHelper
      */
     public function __construct(
         Data $helper,
@@ -172,12 +160,10 @@ class Feed
         ProductFactory $productFactory,
         TimezoneInterface $timezone,
         File $driverFile,
-        Repository $viewAssetRepo,
         AttributeCollection $attributeCollection,
         StockRegistryInterface $stockRegistry,
         ConfigurableProduct $configurable,
-        ProductRepositoryInterface $productRepository,
-        Image $imageHelper
+        ProductRepositoryInterface $productRepository
     ) {
         $this->_retailRocketHelper = $helper;
         $this->logger = $logger;
@@ -187,7 +173,6 @@ class Feed
         $this->_productFactory = $productFactory;
         $this->_timeZone = $timezone;
         $this->_driverFile = $driverFile;
-        $this->_viewAssetRepo = $viewAssetRepo;
         $this->_descriptionAttribute = $helper->getDescriptionAttribute() ? $helper->getDescriptionAttribute() : 'description';
         $modelAttribute = $helper->getModelAttribute();
         $vendorAttribute = $helper->getVendorAttribute();
@@ -195,7 +180,6 @@ class Feed
         $this->_stockRegistry = $stockRegistry;
         $this->_configurable = $configurable;
         $this->_productRepository = $productRepository;
-        $this->_imageHelper = $imageHelper;
 
         $extraAttributes = $helper->getExtraAttributes();
 
@@ -345,7 +329,7 @@ class Feed
 
             $result[] = [
                 'id' => $category->getId(),
-                'name' => $this->replaceXmlEntities($category->getName()),
+                'name' => $this->_retailRocketHelper->replaceXmlEntities($category->getName()),
                 'parentId' => $category->getParentId() == $rootCategoryId ? null : $category->getParentId()
             ];
         }
@@ -424,6 +408,7 @@ class Feed
         if($storeId)
         {
             $collection->setStoreId($storeId);
+            $collection->addStoreFilter($storeId); //1.0.11
         }
 
         if($websiteId)
@@ -487,7 +472,7 @@ class Feed
                     {
                         $params[] = [
                             'code' => $extraAttribute,
-                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                            'label' => $this->_retailRocketHelper->getAttributeValue($product,$extraAttribute,$type)
                         ];
                     }
                 }
@@ -514,10 +499,10 @@ class Feed
 
                 $result[$i] = [
                     'id' => $product->getId(),
-                    'url' => $this->replaceXmlEntities($product->getProductUrl()),
+                    'url' => $this->_retailRocketHelper->replaceXmlEntities($product->getProductUrl()),
                     'price' => (float)$grupedPrice,
-                    'picture' => $this->replaceXmlEntities($this->getProductImageUrl($product)),
-                    'name' => $this->replaceXmlEntities($product->getName()),
+                    'picture' => $this->_retailRocketHelper->replaceXmlEntities($this->_retailRocketHelper->getProductImageUrl($product)),
+                    'name' => $this->_retailRocketHelper->replaceXmlEntities($product->getName()),
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => $product->getIsSalable(),
                     'categories' => $lastCategoryId,
@@ -531,7 +516,7 @@ class Feed
                 if(count($this->_modelAttribute))
                 {
                     $key = key($this->_modelAttribute);
-                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                    $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
                 }
                 else
                 {
@@ -541,7 +526,7 @@ class Feed
                 if(count($this->_vendorAttribute))
                 {
                     $key = key($this->_vendorAttribute);
-                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                    $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
                 }
                 else
                 {
@@ -562,7 +547,7 @@ class Feed
                         {
                             $params[] = [
                                 'code' => $extraAttribute,
-                                'label' => $this->getAttributeValue($childProduct,$extraAttribute,$type)
+                                'label' => $this->_retailRocketHelper->getAttributeValue($childProduct,$extraAttribute,$type)
                             ];
                         }
                     }
@@ -588,8 +573,8 @@ class Feed
                         'id' => $childProduct->getId(),
                         'url' => $childProduct->getProductUrl(),
                         'price' => (float)$childProduct->getPrice(),
-                        'picture' => $this->getProductImageUrl($childProduct),
-                        'name' => $this->replaceXmlEntities($childProduct->getName()),
+                        'picture' => $this->_retailRocketHelper->getProductImageUrl($childProduct),
+                        'name' => $this->_retailRocketHelper->replaceXmlEntities($childProduct->getName()),
                         'description' => $childProduct->getData($this->_descriptionAttribute),
                         'available' => $childProduct->getIsSalable(),
                         'categories' => $lastCategoryId,
@@ -601,7 +586,7 @@ class Feed
                     if(count($this->_modelAttribute))
                     {
                         $key = key($this->_modelAttribute);
-                        $result[$i]['model'] = $this->getAttributeValue($childProduct,$key,$this->_modelAttribute[$key]);
+                        $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($childProduct,$key,$this->_modelAttribute[$key]);
                     }
                     else
                     {
@@ -611,7 +596,7 @@ class Feed
                     if(count($this->_vendorAttribute))
                     {
                         $key = key($this->_vendorAttribute);
-                        $result[$i]['vendor'] = $this->getAttributeValue($childProduct,$key,$this->_vendorAttribute[$key]);
+                        $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($childProduct,$key,$this->_vendorAttribute[$key]);
                     }
                     else
                     {
@@ -644,7 +629,7 @@ class Feed
                 }
             }
 
-            $productImage = $this->getProductImageUrl($product);
+            $productImage = $this->_retailRocketHelper->getProductImageUrl($product);
 
             if($product->getTypeId() == Configurable::TYPE_CODE)
             {
@@ -674,7 +659,7 @@ class Feed
                     {
                         $params[] = [
                             'code' => $extraAttribute,
-                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                            'label' => $this->_retailRocketHelper->getAttributeValue($product,$extraAttribute,$type)
                         ];
                     }
                 }
@@ -697,6 +682,7 @@ class Feed
                 }
                 $configurableUrl = $product->getProductUrl();
                 $configurableName = $product->getName();
+                $configurableImage = $productImage;
 
                 //Configurable item
                 $result[$i] = [
@@ -716,7 +702,7 @@ class Feed
                 if(count($this->_modelAttribute))
                 {
                     $key = key($this->_modelAttribute);
-                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                    $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
                 }
                 else
                 {
@@ -726,7 +712,7 @@ class Feed
                 if(count($this->_vendorAttribute))
                 {
                     $key = key($this->_vendorAttribute);
-                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                    $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
                 }
                 else
                 {
@@ -734,7 +720,7 @@ class Feed
                 }
 
                 /** Check if applies special price for configurable product */
-                $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+                $applySpecial = $this->_retailRocketHelper->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
 
                 if($applySpecial)
                 {
@@ -802,7 +788,7 @@ class Feed
                         {
                             $params[] = [
                                 'code' => $extraAttribute,
-                                'label' => $this->getAttributeValue($simpleProduct,$extraAttribute,$type)
+                                'label' => $this->_retailRocketHelper->getAttributeValue($simpleProduct,$extraAttribute,$type)
                             ];
                         }
                     }
@@ -832,7 +818,7 @@ class Feed
                         'id' => $simpleProduct->getId(),
                         'url' => $configurableUrl, // 1.0.9 use configurable url for simple products
                         'price' => $finalPrice,
-                        'picture' => $this->getProductImageUrl($simpleProduct),
+                        'picture' => $this->_retailRocketHelper->useParentImageSimple() ? $configurableImage : $this->_retailRocketHelper->getProductImageUrl($simpleProduct), //1.0.11
                         'name' => $this->_retailRocketHelper->useParentNameSimple() ? $configurableName : $simpleProduct->getName(), // 1.0.9
                         'description' => $product->getData($this->_descriptionAttribute),
                         'available' => $productAvailable,
@@ -845,7 +831,7 @@ class Feed
                     if(count($this->_modelAttribute))
                     {
                         $key = key($this->_modelAttribute);
-                        $result[$i]['model'] = $this->getAttributeValue($simpleProduct,$key,$this->_modelAttribute[$key]);
+                        $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($simpleProduct,$key,$this->_modelAttribute[$key]);
                     }
                     else
                     {
@@ -855,14 +841,14 @@ class Feed
                     if(count($this->_vendorAttribute))
                     {
                         $key = key($this->_vendorAttribute);
-                        $result[$i]['vendor'] = $this->getAttributeValue($simpleProduct,$key,$this->_vendorAttribute[$key]);
+                        $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($simpleProduct,$key,$this->_vendorAttribute[$key]);
                     }
                     else
                     {
                         $result[$i]['vendor'] = null;
                     }
 
-                    $applySpecial = $this->applySpecialPrice($price,$simpleProduct->getSpecialPrice(),
+                    $applySpecial = $this->_retailRocketHelper->applySpecialPrice($price,$simpleProduct->getSpecialPrice(),
                         $simpleProduct->getSpecialFromDate(),$simpleProduct->getSpecialToDate());
 
                     if($applySpecial)
@@ -891,7 +877,7 @@ class Feed
                     {
                         $params[] = [
                             'code' => $extraAttribute,
-                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                            'label' => $this->_retailRocketHelper->getAttributeValue($product,$extraAttribute,$type)
                         ];
                     }
                 }
@@ -930,7 +916,7 @@ class Feed
                 if(count($this->_modelAttribute))
                 {
                     $key = key($this->_modelAttribute);
-                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                    $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
                 }
                 else
                 {
@@ -940,14 +926,14 @@ class Feed
                 if(count($this->_vendorAttribute))
                 {
                     $key = key($this->_vendorAttribute);
-                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                    $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
                 }
                 else
                 {
                     $result[$i]['vendor'] = null;
                 }
 
-                $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+                $applySpecial = $this->_retailRocketHelper->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
 
                 if($applySpecial)
                 {
@@ -1016,7 +1002,7 @@ class Feed
                     {
                         $params[] = [
                             'code' => $extraAttribute,
-                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                            'label' => $this->_retailRocketHelper->getAttributeValue($product,$extraAttribute,$type)
                         ];
                     }
                 }
@@ -1044,7 +1030,7 @@ class Feed
                     'id' => $product->getId(),
                     'url' => $product->getUrlInStore(),
                     'price' => (float)$grupedPrice,
-                    'picture' => $this->getProductImageUrl($product),
+                    'picture' => $this->_retailRocketHelper->getProductImageUrl($product),
                     'name' => $product->getName(),
                     'description' => $product->getData($this->_descriptionAttribute),
                     'available' => false,
@@ -1059,7 +1045,7 @@ class Feed
                 if(count($this->_modelAttribute))
                 {
                     $key = key($this->_modelAttribute);
-                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                    $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
                 }
                 else
                 {
@@ -1069,7 +1055,7 @@ class Feed
                 if(count($this->_vendorAttribute))
                 {
                     $key = key($this->_vendorAttribute);
-                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                    $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
                 }
                 else
                 {
@@ -1096,7 +1082,7 @@ class Feed
                         $result[$i]['stock'][$webisteCode]['available'] = $productAvailable;
                         $result[$i]['stock'][$webisteCode]['price'] = (float)$grupedPriceByStockId; //@TODO
                         $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
-                        $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId);
+                        $result[$i]['stock'][$webisteCode]['picture'] = $this->_retailRocketHelper->getProductImageUrl($productByStockId);
                     }
                 }
 
@@ -1112,7 +1098,7 @@ class Feed
                         {
                             $params[] = [
                                 'code' => $extraAttribute,
-                                'label' => $this->getAttributeValue($childProduct,$extraAttribute,$type)
+                                'label' => $this->_retailRocketHelper->getAttributeValue($childProduct,$extraAttribute,$type)
                             ];
                         }
                     }
@@ -1137,7 +1123,7 @@ class Feed
                         'id' => $childProduct->getId(),
                         'url' => $childProduct->getUrlInStore(),
                         'price' => (float)$childProduct->getPrice(), //@TODO
-                        'picture' => $this->getProductImageUrl($childProduct),
+                        'picture' => $this->_retailRocketHelper->getProductImageUrl($childProduct),
                         'name' => $childProduct->getName(),
                         'description' => $childProduct->getData($this->_descriptionAttribute),
                         'available' => false,
@@ -1150,7 +1136,7 @@ class Feed
                     if(count($this->_modelAttribute))
                     {
                         $key = key($this->_modelAttribute);
-                        $result[$i]['model'] = $this->getAttributeValue($childProduct,$key,$this->_modelAttribute[$key]);
+                        $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($childProduct,$key,$this->_modelAttribute[$key]);
                     }
                     else
                     {
@@ -1160,7 +1146,7 @@ class Feed
                     if(count($this->_vendorAttribute))
                     {
                         $key = key($this->_vendorAttribute);
-                        $result[$i]['vendor'] = $this->getAttributeValue($childProduct,$key,$this->_vendorAttribute[$key]);
+                        $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($childProduct,$key,$this->_vendorAttribute[$key]);
                     }
                     else
                     {
@@ -1201,7 +1187,7 @@ class Feed
                             $specialToDate = $childProduct->getData('special_to_date');
                             $minimalPrice = (float)$childProduct->getMinimalPrice();
 
-                            $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+                            $applySpecial = $this->_retailRocketHelper->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
 
                             $result[$i]['stock'][$webisteCode]['price'] = $finalPrice;
 
@@ -1218,7 +1204,7 @@ class Feed
                             }
 
                             $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
-                            $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId);
+                            $result[$i]['stock'][$webisteCode]['picture'] = $this->_retailRocketHelper->getProductImageUrl($productByStockId);
                         }
                     }
                 }
@@ -1258,7 +1244,7 @@ class Feed
 
                         $price = $this->_retailRocketHelper->getGroupedPrice($product);
 
-                        $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+                        $applySpecial = $this->_retailRocketHelper->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
 
                         $result[$i]['stock'][$webisteCode]['price'] = $price;
 
@@ -1275,7 +1261,7 @@ class Feed
                         }
 
                         $result[$i]['stock'][$webisteCode]['url'] = $productByStockId->getProductUrl();
-                        $result[$i]['stock'][$webisteCode]['picture'] = $this->getProductImageUrl($productByStockId);
+                        $result[$i]['stock'][$webisteCode]['picture'] = $this->_retailRocketHelper->getProductImageUrl($productByStockId);
                     }
                 }
 
@@ -1298,7 +1284,7 @@ class Feed
                 $finalPrice = $minimalPrice;
             }
 
-            $productImage = $this->getProductImageUrl($product);
+            $productImage = $this->_retailRocketHelper->getProductImageUrl($product);
 
             if($product->getTypeId() == Configurable::TYPE_CODE)
             {
@@ -1323,7 +1309,7 @@ class Feed
                     {
                         $params[] = [
                             'code' => $extraAttribute,
-                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                            'label' => $this->_retailRocketHelper->getAttributeValue($product,$extraAttribute,$type)
                         ];
                     }
                 }
@@ -1364,7 +1350,7 @@ class Feed
                 if(count($this->_modelAttribute))
                 {
                     $key = key($this->_modelAttribute);
-                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                    $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
                 }
                 else
                 {
@@ -1374,7 +1360,7 @@ class Feed
                 if(count($this->_vendorAttribute))
                 {
                     $key = key($this->_vendorAttribute);
-                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                    $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
                 }
                 else
                 {
@@ -1382,7 +1368,7 @@ class Feed
                 }
 
                 /** Check if applies special price for configurable product */
-                $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+                $applySpecial = $this->_retailRocketHelper->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
 
                 if($applySpecial)
                 {
@@ -1422,7 +1408,7 @@ class Feed
 
                             $result[$i]['stock'][$storeCode]['price'] = 0;
                             $result[$i]['stock'][$storeCode]['url'] = $productByStockId->setStoreId($_storeId)->getProductUrl();
-                            $result[$i]['stock'][$storeCode]['picture'] = $this->getProductImageUrl($productByStockId);
+                            $result[$i]['stock'][$storeCode]['picture'] = $this->_retailRocketHelper->getProductImageUrl($productByStockId);
 
                             $configurableProductStore[$storeCode] = [];
                             $configurableProductStore[$storeCode]['name'] = $result[$i]['stock'][$storeCode]['name'];
@@ -1489,7 +1475,7 @@ class Feed
                         {
                             $params[] = [
                                 'code' => $extraAttribute,
-                                'label' => $this->getAttributeValue($simpleProduct,$extraAttribute,$type)
+                                'label' => $this->_retailRocketHelper->getAttributeValue($simpleProduct,$extraAttribute,$type)
                             ];
                         }
                     }
@@ -1518,7 +1504,7 @@ class Feed
                         'id' => $simpleProduct->getId(),
                         'url' => $configurableUrl, //Los productos simples llevan la url del configurable 03-05-2021
                         'price' => $finalPrice,
-                        'picture' => $this->getProductImageUrl($simpleProduct),
+                        'picture' => $this->_retailRocketHelper->getProductImageUrl($simpleProduct),
                         'name' => $simpleProduct->getName(),
                         'description' => $product->getData($this->_descriptionAttribute),
                         'available' => false,
@@ -1531,7 +1517,7 @@ class Feed
                     if(count($this->_modelAttribute))
                     {
                         $key = key($this->_modelAttribute);
-                        $result[$i]['model'] = $this->getAttributeValue($simpleProduct,$key,$this->_modelAttribute[$key]);
+                        $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($simpleProduct,$key,$this->_modelAttribute[$key]);
                     }
                     else
                     {
@@ -1541,14 +1527,14 @@ class Feed
                     if(count($this->_vendorAttribute))
                     {
                         $key = key($this->_vendorAttribute);
-                        $result[$i]['vendor'] = $this->getAttributeValue($simpleProduct,$key,$this->_vendorAttribute[$key]);
+                        $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($simpleProduct,$key,$this->_vendorAttribute[$key]);
                     }
                     else
                     {
                         $result[$i]['vendor'] = null;
                     }
 
-                    $applySpecial = $this->applySpecialPrice($price,$simpleProduct->getSpecialPrice(),
+                    $applySpecial = $this->_retailRocketHelper->applySpecialPrice($price,$simpleProduct->getSpecialPrice(),
                         $simpleProduct->getSpecialFromDate(),$simpleProduct->getSpecialToDate());
 
                     if($applySpecial)
@@ -1605,7 +1591,7 @@ class Feed
                                 }
 
                                 $result[$i]['stock'][$storeCode]['url'] = isset($configurableProductStore[$storeCode]['url']) ? $configurableProductStore[$storeCode]['url'] : $productByStockId->getProductUrl();
-                                $result[$i]['stock'][$storeCode]['picture'] = $this->getProductImageUrl($productByStockId);
+                                $result[$i]['stock'][$storeCode]['picture'] = $this->_retailRocketHelper->getProductImageUrl($productByStockId);
                             }
                         }
                     }
@@ -1622,7 +1608,7 @@ class Feed
                     {
                         $params[] = [
                             'code' => $extraAttribute,
-                            'label' => $this->getAttributeValue($product,$extraAttribute,$type)
+                            'label' => $this->_retailRocketHelper->getAttributeValue($product,$extraAttribute,$type)
                         ];
                     }
                 }
@@ -1666,7 +1652,7 @@ class Feed
                 if(count($this->_modelAttribute))
                 {
                     $key = key($this->_modelAttribute);
-                    $result[$i]['model'] = $this->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
+                    $result[$i]['model'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_modelAttribute[$key]);
                 }
                 else
                 {
@@ -1676,14 +1662,14 @@ class Feed
                 if(count($this->_vendorAttribute))
                 {
                     $key = key($this->_vendorAttribute);
-                    $result[$i]['vendor'] = $this->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
+                    $result[$i]['vendor'] = $this->_retailRocketHelper->getAttributeValue($product,$key,$this->_vendorAttribute[$key]);
                 }
                 else
                 {
                     $result[$i]['vendor'] = null;
                 }
 
-                $applySpecial = $this->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
+                $applySpecial = $this->_retailRocketHelper->applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate);
 
                 if($applySpecial)
                 {
@@ -1745,7 +1731,7 @@ class Feed
                         }
 
                         $result[$i]['stock'][$storeCode]['url'] = $productByStockId->setStoreId($_storeId)->getProductUrl();;
-                        $result[$i]['stock'][$storeCode]['picture'] = $this->getProductImageUrl($productByStockId);
+                        $result[$i]['stock'][$storeCode]['picture'] = $this->_retailRocketHelper->getProductImageUrl($productByStockId);
                     }
                 }
             }
@@ -1782,89 +1768,6 @@ class Feed
         }
 
         return $categories;
-    }
-
-    /**
-     * @param $product
-     * @param null $parentImage
-     * @return string
-     */
-    public function getProductImageUrl($product, $parentImage = null)
-    {
-        if(!$product->getSmallImage() || $product->getSmallImage() == 'no_selection')
-        {
-            if($parentImage)
-            {
-                return $parentImage;
-            }else{
-                return $this->_viewAssetRepo->getUrlWithParams(
-                    'Magento_Catalog::images/product/placeholder/image.jpg' ,
-                    ['area' => 'frontend']
-                );
-            }
-        }
-        else
-        {
-            $ProductImageType = $this->_retailRocketHelper->getXmlProductImageType();
-
-            $imageUrl = $this->_imageHelper
-                ->init($product, $ProductImageType)
-                ->setImageFile($product->getSmallImage())
-                ->resize(380)
-                ->getUrl();
-
-            if($this->_retailRocketHelper->getRemovePub() && false !== strpos($imageUrl,'pub/'))
-            {
-                return str_replace('pub/','',$imageUrl);
-            }
-
-            return $imageUrl;
-        }
-    }
-
-    /**
-     * @param $product
-     * @param string $attributeCode
-     * @param string $attributeType
-     * @return string
-     */
-    public function getAttributeValue($product,$attributeCode,$attributeType)
-    {
-        return $attributeType == 'select' || $attributeType == 'multiselect' ? $this->replaceXmlEntities($product->getResource()
-            ->getAttribute($attributeCode)->getFrontend()->getValue($product)
-        ) : $this->replaceXmlEntities($product->getData($attributeCode));
-    }
-
-    /**
-     * @param $price
-     * @param $specialPrice
-     * @param $specialFromDate
-     * @param $specialToDate
-     * @return bool
-     */
-    public function applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate)
-    {
-        $now = strtotime($this->_timeZone->date()->format('Y-m-d H:i:s'));
-
-        $specialPrice = (float) $specialPrice;
-        $price = (float) $price;
-
-        if(is_null($specialPrice) || $specialPrice == 0)
-            return false;
-
-        if($specialPrice < $price)
-        {
-            if ((is_null($specialFromDate) &&is_null($specialToDate))
-                || ($now >= strtotime($specialFromDate) && is_null($specialToDate))
-                || ($now <= strtotime($specialToDate) &&is_null($specialFromDate))
-                || ($now >= strtotime($specialFromDate) && $now <= strtotime($specialToDate)))
-            {
-                return true;
-            }
-        }
-        else{
-            return false;
-        }
     }
 
     /**
@@ -1994,7 +1897,7 @@ class Feed
             }
 
             $products.= ">";
-            $products .= "<url>{$this->replaceXmlEntities($product['url'])}</url>";
+            $products .= "<url>{$this->_retailRocketHelper->removeUrlStoreParams($this->_retailRocketHelper->replaceXmlEntities($product['url']))}</url>";
             $products .= "<price>{$product['price']}</price>";
 
             if(isset($product['oldprice']))
@@ -2012,7 +1915,7 @@ class Feed
 
             $products .= "<picture>{$product['picture']}</picture>";
 
-            $product['name'] = $this->replaceXmlEntities($product['name']);
+            $product['name'] = $this->_retailRocketHelper->replaceXmlEntities($product['name']);
             $products .= "<name>{$product['name']}</name>";
 
 
@@ -2021,11 +1924,14 @@ class Feed
                 foreach ($product['params'] as $param)
                 {
                     if($param['label'])
-                        $products .= "<param name=\"{$param['code']}\">{$this->replaceXmlEntities($param['label'])}</param>";
+                        $products .= "<param name=\"{$param['code']}\">{$this->_retailRocketHelper->replaceXmlEntities($param['label'])}</param>";
                 }
             }
 
             $product['description'] = strip_tags($product['description']);
+
+            //Added in 1.0.11 to remove spaces
+            $product['description'] = preg_replace('~[\r\n\t]+~', '', $product['description']);
 
             if($this->_retailRocketHelper->removeSpecialCharsDescription())
             {
@@ -2036,7 +1942,7 @@ class Feed
             if(strlen($product['description']) >= 200)
             {
                 $product['description'] = substr($product['description'],0,190);
-                $product['description'] = $this->replaceXmlEntities($product['description']);
+                $product['description'] = $this->_retailRocketHelper->replaceXmlEntities($product['description']);
 
                 //1.0.10 max length added
                 $descriptionMaxLength = $this->_retailRocketHelper->getDescriptionAttributeMaxLength();
@@ -2049,9 +1955,9 @@ class Feed
                 $product['description'] = substr_replace($product['description'],'...',-3,3);
             }
 
-            $product['description'] = $this->replaceXmlEntities($product['description']);
+            $product['description'] = $this->_retailRocketHelper->replaceXmlEntities($product['description']);
 
-            if($this->hasHtml($product['description']))
+            if($this->_retailRocketHelper->hasHtml($product['description']))
             {
                 $products .= "<description><![CDATA[{$product['description']}]]></description>";
             }
@@ -2066,7 +1972,7 @@ class Feed
                     $product['model'] = $this->_retailRocketHelper->cleanString($product['model']);
                 }
 
-                $products .= "<model>{$this->replaceXmlEntities($product['model'])}</model>";
+                $products .= "<model>{$this->_retailRocketHelper->replaceXmlEntities($product['model'])}</model>";
             }
 
             if($product['vendor'])
@@ -2076,12 +1982,12 @@ class Feed
                     $product['vendor'] = $this->_retailRocketHelper->cleanString($product['vendor']);
                 }
 
-                $products .= "<vendor>{$this->replaceXmlEntities($product['vendor'])}</vendor>";
+                $products .= "<vendor>{$this->_retailRocketHelper->replaceXmlEntities($product['vendor'])}</vendor>";
             }
 
             if(isset($product['visibility']) && !empty($product['visibility']))
             {
-                $products .= "<param name=\"visibility\">{$this->getVisibilityText($product['visibility'])}</param>";
+                $products .= "<param name=\"visibility\">{$this->_retailRocketHelper->getVisibilityText($product['visibility'])}</param>";
             }
 
             if(isset($product['stock']) && is_array($product['stock']))
@@ -2093,13 +1999,13 @@ class Feed
                         $website['name'] = $this->_retailRocketHelper->cleanString($website['name']);
                     }
 
-                    $website['name'] = $this->replaceXmlEntities($website['name']);
+                    $website['name'] = $this->_retailRocketHelper->replaceXmlEntities($website['name']);
 
                     $products .= "<stock id=\"{$code}\">";
                     $products .= "<picture>{$website['picture']}</picture>";
                     $products .= "<name>{$website['name']}</name>";
                     $products .= "<price>{$website['price']}</price>";
-                    $products .= "<url>{$this->replaceXmlEntities($website['url'])}</url>";
+                    $products .= "<url>{$this->_retailRocketHelper->replaceXmlEntities($website['url'])}</url>";
 
 
                     $website['available'] = $website['available'] ? 'true' : 'false';
@@ -2119,10 +2025,10 @@ class Feed
                     if(strlen($website['description']) >= 200)
                     {
                         $website['description'] = substr($product['description'],0,190);
-                        $website['description'] = $this->replaceXmlEntities($product['description']);
+                        $website['description'] = $this->_retailRocketHelper->replaceXmlEntities($product['description']);
                     }
 
-                    if($this->hasHtml($website['description']))
+                    if($this->_retailRocketHelper->hasHtml($website['description']))
                     {
                         $website['description'] = strip_tags($website['description']);
 
@@ -2148,7 +2054,7 @@ class Feed
                             $product['model'] = $this->_retailRocketHelper->cleanString($product['model']);
                         }
 
-                        $products .= "<model>{$this->replaceXmlEntities($website['model'])}</model>";
+                        $products .= "<model>{$this->_retailRocketHelper->replaceXmlEntities($website['model'])}</model>";
                     }
 
                     if(isset($website['vendor']))
@@ -2158,7 +2064,7 @@ class Feed
                             $product['vendor'] = $this->_retailRocketHelper->cleanString($product['vendor']);
                         }
 
-                        $products .= "<vendor>{$this->replaceXmlEntities($website['vendor'])}</vendor>";
+                        $products .= "<vendor>{$this->_retailRocketHelper->replaceXmlEntities($website['vendor'])}</vendor>";
                     }
 
                     $products .= "</stock>";
@@ -2179,48 +2085,5 @@ class Feed
         $footer .= "</yml_catalog>";
 
         return $footer;
-    }
-
-    /**
-     * @param $visibilityNumber
-     * @return string
-     */
-    public function getVisibilityText($visibilityNumber)
-    {
-        $options = Visibility::getOptionArray();
-
-        return is_numeric($visibilityNumber) ? $options[$visibilityNumber] : null;
-    }
-
-    /**
-     * @param $string
-     * @return string
-     */
-    public function replaceXmlEntities($string)
-    {
-        return strtr(
-            $string,
-            array(
-                "<" => "&lt;",
-                ">" => "&gt;",
-                '"' => "&quot;",
-                "'" => "&apos;",
-                "&" => "&amp;",
-            )
-        );
-    }
-
-    /**
-     * @param string $string
-     * @return bool
-     */
-    public function hasHtml($string)
-    {
-        if($string != strip_tags($string))
-        {
-            return true;
-        }
-
-        return false;
     }
 }

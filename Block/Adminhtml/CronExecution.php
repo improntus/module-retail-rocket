@@ -9,7 +9,7 @@ use Magento\Cron\Model\ResourceModel\Schedule\CollectionFactory;
 /**
  * Class Links
  *
- * @version 1.0.10
+ * @version 1.0.11
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block\Adminhtml
@@ -48,7 +48,7 @@ class CronExecution extends Field
         $cronSchedule->getSelect()->limit(10);
 
         $links = [];
-        
+
         $html = '<div>';
         $html .= '<table>';
 
@@ -97,7 +97,7 @@ class CronExecution extends Field
 
         $html .= '</tbody></table>';
         $html .= '</div>';
-        
+
         return $html;
     }
 }

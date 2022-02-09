@@ -6,7 +6,7 @@ use Magento\Framework\Exception\LocalizedException;
 /**
  * Class Cron
  *
- * @version 1.0.10
+ * @version 1.0.11
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Model\Config
@@ -26,7 +26,7 @@ class Cron extends \Magento\Framework\App\Config\Value
             'Regex',
             ['pattern' => '/^[0-9,\-\?\/\*\ ]+$/']
         );
-        
+
         if (!$validator) {
             $message = __(
                 'Please correct Cron Expression: "%1".',
@@ -34,7 +34,7 @@ class Cron extends \Magento\Framework\App\Config\Value
             );
             throw new LocalizedException($message);
         }
-        
+
         return $this;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Improntus\RetailRocket\Helper;
 
+use Magento\Catalog\Model\Product\Visibility;
 use Magento\ConfigurableProduct\Pricing\Price\LowestPriceOptionsProviderInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
@@ -13,16 +14,18 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\UrlInterface;
+use Magento\Framework\View\Asset\Repository;
 use Magento\Sales\Model\Order;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 use Magento\Catalog\Model\ProductFactory;
+use Magento\Catalog\Helper\Image;
 
 /**
  * Class Data
  *
- * @version 1.0.10
+ * @version 1.0.11
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Helper
@@ -70,15 +73,28 @@ class Data extends AbstractHelper
     protected $_timeZone;
 
     /**
+     * @var Repository
+     */
+    protected $_viewAssetRepo;
+
+    /**
+     * @var Image
+     */
+    protected $_imageHelper;
+
+    /**
      * Data constructor.
-     * @param Context $context
-     * @param Session $session
-     * @param CheckoutSession $checkoutSession
-     * @param Filesystem $filesystem
+     *
+     * @param Context               $context
+     * @param Session               $session
+     * @param CheckoutSession       $checkoutSession
+     * @param Filesystem            $filesystem
      * @param StoreManagerInterface $storeManager
-     * @param LoggerInterface $logger
-     * @param ProductFactory $productFactory
-     * @param TimezoneInterface $timezone
+     * @param LoggerInterface       $logger
+     * @param ProductFactory        $productFactory
+     * @param TimezoneInterface     $timezone
+     * @param Image                 $imageHelper
+     * @param Repository            $viewAssetRepository
      */
     public function __construct(
         Context $context,
@@ -88,7 +104,9 @@ class Data extends AbstractHelper
         StoreManagerInterface $storeManager,
         LoggerInterface $logger,
         ProductFactory $productFactory,
-        TimezoneInterface $timezone
+        TimezoneInterface $timezone,
+        Image $imageHelper,
+        Repository $viewAssetRepository
     )
     {
         $this->_retailRocketSession = $session;
@@ -98,6 +116,8 @@ class Data extends AbstractHelper
         $this->_logger = $logger;
         $this->_productFactory = $productFactory;
         $this->_timeZone = $timezone;
+        $this->_imageHelper = $imageHelper;
+        $this->_viewAssetRepo = $viewAssetRepository;
 
         parent::__construct($context);
     }
@@ -239,6 +259,14 @@ class Data extends AbstractHelper
     public function useParentNameSimple()
     {
         return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/use_parent_name_simple');
+    }
+
+    /**
+     * @return bool
+     */
+    public function useParentImageSimple()
+    {
+        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/use_parent_image_simple');
     }
 
     /**
@@ -443,12 +471,17 @@ class Data extends AbstractHelper
             }
 
             //Validation in version 1.0.10
-            $price = is_array($prices) ? min($prices) : 0;
+            $price = (is_array($prices) && count($prices)) ? min($prices) : 0;
         }
 
         return (float)$price;
     }
 
+    /**
+     * @param $product
+     *
+     * @return float
+     */
     public function getGroupedPrice($product)
     {
         $price = null;
@@ -508,5 +541,148 @@ class Data extends AbstractHelper
         }
 
         return 0.0;
+    }
+
+    /**
+     * @param $product
+     * @param string $attributeCode
+     * @param string $attributeType
+     * @return string
+     */
+    public function getAttributeValue($product,$attributeCode,$attributeType)
+    {
+        return $attributeType == 'select' || $attributeType == 'multiselect' ? $this->replaceXmlEntities($product->getResource()
+                                                                                                                 ->getAttribute($attributeCode)->getFrontend()->getValue($product)
+        ) : $this->replaceXmlEntities($product->getData($attributeCode));
+    }
+
+    /**
+     * @param $string
+     * @return string
+     */
+    public function replaceXmlEntities($string)
+    {
+        return strtr(
+            $string,
+            array(
+                "<" => "&lt;",
+                ">" => "&gt;",
+                '"' => "&quot;",
+                "'" => "&apos;",
+                "&" => "&amp;",
+            )
+        );
+    }
+
+    /**
+     * @param string $string
+     * @return bool
+     */
+    public function hasHtml($string)
+    {
+        if($string != strip_tags($string))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $product
+     * @param null $parentImage
+     * @return string
+     */
+    public function getProductImageUrl($product, $parentImage = null)
+    {
+        if(!$product->getSmallImage() || $product->getSmallImage() == 'no_selection')
+        {
+            if($parentImage)
+            {
+                return $parentImage;
+            }else{
+                return $this->_viewAssetRepo->getUrlWithParams(
+                    'Magento_Catalog::images/product/placeholder/image.jpg' ,
+                    ['area' => 'frontend']
+                );
+            }
+        }
+        else
+        {
+            $ProductImageType = $this->getXmlProductImageType();
+
+            $imageUrl = $this->_imageHelper
+                ->init($product, $ProductImageType)
+                ->setImageFile($product->getSmallImage())
+                ->resize(380)
+                ->getUrl();
+
+            if($this->getRemovePub() && false !== strpos($imageUrl,'pub/'))
+            {
+                return str_replace('pub/','',$imageUrl);
+            }
+
+            return $imageUrl;
+        }
+    }
+
+    /**
+     * @param $price
+     * @param $specialPrice
+     * @param $specialFromDate
+     * @param $specialToDate
+     * @return bool
+     */
+    public function applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate)
+    {
+        $now = strtotime($this->_timeZone->date()->format('Y-m-d H:i:s'));
+
+        $specialPrice = (float) $specialPrice;
+        $price = (float) $price;
+
+        if(is_null($specialPrice) || $specialPrice == 0)
+            return false;
+
+        if($specialPrice < $price)
+        {
+            if ((is_null($specialFromDate) &&is_null($specialToDate))
+                || ($now >= strtotime($specialFromDate) && is_null($specialToDate))
+                || ($now <= strtotime($specialToDate) &&is_null($specialFromDate))
+                || ($now >= strtotime($specialFromDate) && $now <= strtotime($specialToDate)))
+            {
+                return true;
+            }
+        }
+        else{
+            return false;
+        }
+    }
+
+    /**
+     * @param $visibilityNumber
+     * @return string
+     */
+    public function getVisibilityText($visibilityNumber)
+    {
+        $options = Visibility::getOptionArray();
+
+        return is_numeric($visibilityNumber) ? $options[$visibilityNumber] : null;
+    }
+
+    /**
+     * @param string $url
+     * @return string
+     */
+    public function removeUrlStoreParams($url)
+    {
+        $queryParams = parse_url($url,PHP_URL_QUERY);
+
+        if($queryParams && strpos($url,$queryParams) !== false)
+        {
+            $url = str_replace($queryParams,'',$url);
+            $url = str_replace('?','',$url);
+        }
+
+        return $url;
     }
 }
