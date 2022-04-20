@@ -20,6 +20,8 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\SalesRule\Model\CouponFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
+use Magento\Checkout\Helper\Cart as CartHelper;
+use Magento\Framework\Escaper;
 
 /**
  * Class Index
@@ -61,17 +63,30 @@ class Index extends \Magento\Checkout\Controller\Cart
     protected $_productRepository;
 
     /**
+     * @var CartHelper
+     */
+    protected $_cartHelper;
+
+    /**
+     * @var Escaper
+     */
+    protected $_escaper;
+
+    /**
      * Index constructor.
-     * @param Context $context
-     * @param ScopeConfigInterface $scopeConfig
-     * @param Session $checkoutSession
-     * @param StoreManagerInterface $storeManager
-     * @param Validator $formKeyValidator
-     * @param Cart $cart
+     *
+     * @param Context                    $context
+     * @param ScopeConfigInterface       $scopeConfig
+     * @param Session                    $checkoutSession
+     * @param StoreManagerInterface      $storeManager
+     * @param Validator                  $formKeyValidator
+     * @param Cart                       $cart
      * @param ProductRepositoryInterface $productRepository
-     * @param CollectionFactory $collectionFactory
-     * @param CartRepositoryInterface $quoteRepository
-     * @param CouponFactory $couponFactory
+     * @param CollectionFactory          $collectionFactory
+     * @param CartRepositoryInterface    $quoteRepository
+     * @param CouponFactory              $couponFactory
+     * @param CartHelper                 $cartHelper
+     * @param Escaper                    $escaper
      */
     public function __construct(
         Context $context,
@@ -83,11 +98,15 @@ class Index extends \Magento\Checkout\Controller\Cart
         ProductRepositoryInterface $productRepository,
         CollectionFactory $collectionFactory,
         CartRepositoryInterface $quoteRepository,
-        CouponFactory $couponFactory
+        CouponFactory $couponFactory,
+        CartHelper $cartHelper,
+        Escaper $escaper
     )
     {
         $this->quoteRepository = $quoteRepository;
         $this->couponFactory = $couponFactory;
+        $this->_cartHelper = $cartHelper;
+        $this->_escaper = $escaper;
 
         parent::__construct(
             $context,
@@ -131,8 +150,10 @@ class Index extends \Magento\Checkout\Controller\Cart
         $sku = $this->getRequest()->getParam('sku') ? explode(',',$this->getRequest()->getParam('sku')) : null;
         $qty = $this->getRequest()->getParam('qty') ? explode(',',$this->getRequest()->getParam('qty')) : null;
         $productId = $this->getRequest()->getParam('id') ? explode(',',$this->getRequest()->getParam('id')) : null;
+        $configurableId = $this->getRequest()->getParam('parent_id') ? explode(',',$this->getRequest()->getParam('parent_id')) : null;
+        $backUrl = $this->getRequest()->getParam('back_url') ? $this->getRequest()->getParam('back_url') : null;
         $ga = $this->getRequest()->getParam('_ga');
-        $cartUrl = $this->_objectManager->get('Magento\Checkout\Helper\Cart')->getCartUrl();
+        $cartUrl = $this->_cartHelper->getCartUrl();
 
         if (isset($ga)) {
             $cartUrl = $cartUrl . "?_ga=" . $ga;
@@ -172,6 +193,12 @@ class Index extends \Magento\Checkout\Controller\Cart
                     ];
 
                     $this->cart->addProduct($product, $params);
+
+                    $message = __(
+                        'You added %1 to your shopping cart.',
+                        $product->getName()
+                    );
+                    $this->messageManager->addSuccessMessage($message);
                 }
             }
             elseif (isset($productId))
@@ -183,15 +210,46 @@ class Index extends \Magento\Checkout\Controller\Cart
                         throw new NotFoundException(__('Number of product ids must be equal to qty'));
                     }
 
-                    foreach ($productId as $index => $_productId)
+                    if(isset($configurableId) && is_array($configurableId))
                     {
-                        $product = $this->getProductById($_productId);
+                        foreach ($configurableId as $index => $_configurableProductId)
+                        {
+                            $product = $this->getProductById($_configurableProductId);
+                            $productAttributeOptions = $product->getTypeInstance(true)->getConfigurableAttributesAsArray($product);
 
-                        $params = [
-                            'qty' => $qty[$index]
-                        ];
+                            $childProduct = $this->getProductById($productId[$index]);
+                            $options = [];
 
-                        $this->cart->addProduct($product, $params);
+                            foreach($productAttributeOptions as $option)
+                            {
+                                $options[$option['attribute_id']] =  $childProduct->getData($option['attribute_code']);
+                            }
+
+                            $params = [
+                                'super_attribute' => $options,
+                                'qty' => $qty[$index]
+                            ];
+
+                            $this->cart->addProduct($product, $params);
+
+                            $message = __(
+                                'You added %1 to your shopping cart.',
+                                $product->getName()
+                            );
+                            $this->messageManager->addSuccessMessage($message);
+                        }
+                    }
+                    else{
+                        foreach ($productId as $index => $_productId)
+                        {
+                            $product = $this->getProductById($_productId);
+
+                            $params = [
+                                'qty' => $qty[$index]
+                            ];
+
+                            $this->cart->addProduct($product, $params);
+                        }
                     }
                 }
                 else{
@@ -207,6 +265,12 @@ class Index extends \Magento\Checkout\Controller\Cart
                     ];
 
                     $this->cart->addProduct($product, $params);
+
+                    $message = __(
+                        'You added %1 to your shopping cart.',
+                        $product->getName()
+                    );
+                    $this->messageManager->addSuccessMessage($message);
                 }
             } else {
                 throw new NotFoundException(__('Not found'));
@@ -238,21 +302,21 @@ class Index extends \Magento\Checkout\Controller\Cart
                     }
 
                     if ($codeLength) {
-                        $escaper = $this->_objectManager->get('Magento\Framework\Escaper');
+                        $escaper = $this->_escaper;
                         if (!$itemsCount) {
                             if ($isCodeLengthValid) {
                                 $coupon = $this->couponFactory->create();
                                 $coupon->load($couponCode, 'code');
                                 if ($coupon->getId()) {
                                     $this->_checkoutSession->getQuote()->setCouponCode($couponCode)->save();
-                                    $this->messageManager->addSuccess(
+                                    $this->messageManager->addSuccessMessage(
                                         __(
                                             'You used coupon code "%1".',
                                             $escaper->escapeHtml($couponCode)
                                         )
                                     );
                                 } else {
-                                    $this->messageManager->addError(
+                                    $this->messageManager->addErrorMessage(
                                         __(
                                             'The coupon code "%1" is not valid.',
                                             $escaper->escapeHtml($couponCode)
@@ -260,7 +324,7 @@ class Index extends \Magento\Checkout\Controller\Cart
                                     );
                                 }
                             } else {
-                                $this->messageManager->addError(
+                                $this->messageManager->addErrorMessage(
                                     __(
                                         'The coupon code "%1" is not valid.',
                                         $escaper->escapeHtml($couponCode)
@@ -269,14 +333,14 @@ class Index extends \Magento\Checkout\Controller\Cart
                             }
                         } else {
                             if ($isCodeLengthValid && $couponCode == $cartQuote->getCouponCode()) {
-                                $this->messageManager->addSuccess(
+                                $this->messageManager->addSuccessMessage(
                                     __(
                                         'You used coupon code "%1".',
                                         $escaper->escapeHtml($couponCode)
                                     )
                                 );
                             } else {
-                                $this->messageManager->addError(
+                                $this->messageManager->addErrorMessage(
                                     __(
                                         'The coupon code "%1" is not valid.',
                                         $escaper->escapeHtml($couponCode)
@@ -285,14 +349,18 @@ class Index extends \Magento\Checkout\Controller\Cart
                             }
                         }
                     } else {
-                        $this->messageManager->addSuccess(__('You canceled the coupon code.'));
+                        $this->messageManager->addSuccessMessage(__('You canceled the coupon code.'));
                     }
                 } catch (LocalizedException $e) {
-                    $this->messageManager->addError($e->getMessage());
+                    $this->messageManager->addErrorMessage($e->getMessage());
                 } catch (Exception $e) {
-                    $this->messageManager->addError(__('We cannot apply the coupon code.'));
-                    $this->_objectManager->get('Psr\Log\LoggerInterface')->critical($e);
+                    $this->messageManager->addErrorMessage(__('We cannot apply the coupon code.') . $e->getMessage());
                 }
+            }
+
+            if(isset($backUrl))
+            {
+                return $this->goBack($backUrl);
             }
 
             return $this->goBack($cartUrl);
@@ -300,18 +368,18 @@ class Index extends \Magento\Checkout\Controller\Cart
         } catch (LocalizedException $e) {
             if ($this->_checkoutSession->getUseNotice(true))
             {
-                $this->messageManager->addNotice(
-                    $this->_objectManager->get('Magento\Framework\Escaper')->escapeHtml($e->getMessage())
+                $this->messageManager->addNoticeMessage(
+                    $this->_escaper->escapeHtml($e->getMessage())
                 );
             } else {
                 $messages = array_unique(explode("\n", $e->getMessage()));
                 foreach ($messages as $message) {
-                    $this->messageManager->addError(
-                        $this->_objectManager->get('Magento\Framework\Escaper')->escapeHtml($message)
+                    $this->messageManager->addErrorMessage(
+                        $this->_escaper->escapeHtml($message)
                     );
                 }
             }
-            $cartUrl = $this->_objectManager->get('Magento\Checkout\Helper\Cart')->getCartUrl();
+            $cartUrl = $this->_cartHelper->getCartUrl();
             if (isset($ga)) {
                 $cartUrl = $cartUrl . "?_ga=" . $ga;
             }
@@ -319,11 +387,10 @@ class Index extends \Magento\Checkout\Controller\Cart
 
         } catch (Exception $e)
         {
-            $this->messageManager->addException($e, __('We can\'t add this item to your shopping cart right now.'));
-            $this->messageManager->addException($e, $e->getMessage());
-            $this->_objectManager->get('Psr\Log\LoggerInterface')->critical($e);
+            $this->messageManager->addExceptionMessage($e, __('We can\'t add this item to your shopping cart right now.'));
+            $this->messageManager->addExceptionMessage($e, $e->getMessage());
 
-            $cartUrl = $this->_objectManager->get('Magento\Checkout\Helper\Cart')->getCartUrl();
+            $cartUrl = $this->_cartHelper->getCartUrl();
             if (isset($ga)) {
                 $cartUrl = $cartUrl . "?_ga=" . $ga;
             }

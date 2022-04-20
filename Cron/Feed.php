@@ -818,7 +818,7 @@ class Feed
                         'id' => $simpleProduct->getId(),
                         'url' => $configurableUrl, // 1.0.9 use configurable url for simple products
                         'price' => $finalPrice,
-                        'picture' => $this->_retailRocketHelper->useParentImageSimple() ? $configurableImage : $this->_retailRocketHelper->getProductImageUrl($simpleProduct), //1.0.11
+                        'picture' => $this->_retailRocketHelper->useParentImageSimple() ? $configurableImage : $this->_retailRocketHelper->getProductImageUrl($simpleProduct,$configurableImage), //1.0.11
                         'name' => $this->_retailRocketHelper->useParentNameSimple() ? $configurableName : $simpleProduct->getName(), // 1.0.9
                         'description' => $product->getData($this->_descriptionAttribute),
                         'available' => $productAvailable,

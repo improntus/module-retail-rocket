@@ -1,5 +1,11 @@
 CHANGELOG
 ---------
+### 1.0.12
+
+- Now excluded categories are not sent in category page
+- Now you can add configurable products by url
+- Fixed "Use parent image in simple products" function
+
 ### 1.0.11
 
 - Added option "Use parent image in simple products"

@@ -56,7 +56,13 @@ class Category extends View
 
         if($this->_retailRocketHelper->isModuleEnabled())
         {
+            $excludedCategories = $this->_retailRocketHelper->getExcludedCategories();
             $categoryId = $this->getCurrentCategory()->getId();
+
+            if(!is_null($excludedCategories) && in_array($categoryId,$excludedCategories))
+            {
+                return $html;
+            }
 
             $html = <<<HTML
     <!-- Begin RetailRocket CategoryView Event -->
