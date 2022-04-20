@@ -11,7 +11,7 @@ use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable;
 /**
  * Class CatalogControllerProductInitAfter
  *
- * @version 1.0.11
+ * @version 1.0.12
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Observer
