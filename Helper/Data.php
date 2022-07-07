@@ -443,12 +443,18 @@ class Data extends AbstractHelper
 
         if(count($simpleProductsIds))
         {
+            $productStore = $product->getStore();
+            $websiteId = $productStore->getWebsiteId();
+            $storeId = $productStore->getId();
+
             $productModel = $this->_productFactory->create();
             $collection = $productModel->getCollection()
                 ->addAttributeToSelect('*')
                 ->addAttributeToFilter('entity_id',['in'=>implode(',',$simpleProductsIds)]);
-            $collection->addWebsiteFilter([$product->getStore()->getWebsiteId()]);
+            $collection->addWebsiteFilter([$websiteId]);
 
+            /** @var \Magento\Store\Model\StoreManager */
+            $this->_storeManager->setCurrentStore($storeId);
             $prices = [];
 
             foreach ($collection as $_simpleItem)
@@ -460,10 +466,18 @@ class Data extends AbstractHelper
                 $priceSimple = $_simpleItem->getPrice();
                 $specialPrice = $_simpleItem->getSpecialPrice();
 
+                /**
+                 * Final price with catalog price rules
+                 */
+                $finalPrice = $_simpleItem->getPriceInfo()->getPrice('final_price')->getValue();
+
                 if(!is_null($specialPrice) && $specialPrice != 0
                     && $specialPrice < $priceSimple && $specialFromDate <= $now && $now <= $specialToDate)
                 {
                     $prices[] = $specialPrice;
+                }
+                elseif ($finalPrice < $price){
+                    $prices[] = $finalPrice;
                 }
                 else{
                     $prices[] = $priceSimple;

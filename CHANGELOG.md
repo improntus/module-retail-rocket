@@ -1,5 +1,10 @@
 CHANGELOG
 ---------
+### 1.0.13
+
+- Added param "subscribeDate" when a user subscribes to newsletter
+- Fixes in "getConfigurablePrice()"
+
 ### 1.0.12
 
 - Now excluded categories are not sent in category page

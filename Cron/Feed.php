@@ -811,7 +811,11 @@ class Feed
                     }
 
                     $price = (float)$simpleProduct->getPrice();
-                    $finalPrice = (float)$simpleProduct->getFinalPrice();
+
+                    /**
+                     * Final price with catalog price rules
+                     */
+                    $finalPrice = (float) $simpleProduct->getPriceInfo()->getPrice('final_price')->getValue();
 
                     //Simple item
                     $result[$i] = [

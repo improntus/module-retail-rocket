@@ -138,6 +138,8 @@ class NewsletterSubscriberNew implements ObserverInterface
             $result['additional']['stockId'] = $this->_retailRocketHelper->getCurrentStoreCode();
         }
 
+        $result['additional']['subscribeDate'] = date('Y-m-d');
+
         return $result;
     }
 
