@@ -2,7 +2,7 @@
   "name": "improntus/module-retail-rocket",
   "description": "Retail Rocket Integration",
   "type": "magento2-module",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "authors": [
     {
       "name": "Mauro Maximiliano Martinez",
