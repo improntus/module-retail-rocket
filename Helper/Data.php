@@ -25,8 +25,8 @@ use Magento\Catalog\Helper\Image;
 /**
  * Class Data
  *
- * @version 1.0.13
- * @author Improntus <http://www.improntus.com> - Ecommerce done right
+ * @version 1.0.14
+ * @author Improntus <https://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Helper
  */

@@ -23,5 +23,5 @@
 
 ## Author
 
-* Improntus - <http://www.improntus.com> <_Ecommerce done right_/>
+* Improntus - <https://www.improntus.com> <_Ecommerce done right_/>
 

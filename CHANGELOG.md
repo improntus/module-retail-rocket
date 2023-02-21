@@ -1,5 +1,11 @@
 CHANGELOG
 ---------
+
+### 1.0.14
+
+- Compatibility upgrade with php 8.1
+- Api tracking js was updated to "//mcdn.retailrocket.net/content/javascript/trackingm.js"
+
 ### 1.0.13
 
 - Added param "subscribeDate" when a user subscribes to newsletter
