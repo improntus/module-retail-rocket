@@ -576,16 +576,20 @@ class Data extends AbstractHelper
      */
     public function replaceXmlEntities($string)
     {
-        return strtr(
-            $string,
-            array(
-                "<" => "&lt;",
-                ">" => "&gt;",
-                '"' => "&quot;",
-                "'" => "&apos;",
-                "&" => "&amp;",
-            )
-        );
+        if($string){
+            return strtr(
+                $string,
+                array(
+                    "<" => "&lt;",
+                    ">" => "&gt;",
+                    '"' => "&quot;",
+                    "'" => "&apos;",
+                    "&" => "&amp;",
+                )
+            );
+        }
+        else
+            return $string;
     }
 
     /**

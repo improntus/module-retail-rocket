@@ -38,8 +38,8 @@ class Tracker extends Template
 	public function __construct(
 	    Template\Context $context,
         Data $helper,
-        array $data = [],
-        Customer $customer
+        Customer $customer,
+        array $data = []
     )
     {
         $this->_helper = $helper;

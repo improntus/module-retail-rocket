@@ -1932,10 +1932,10 @@ class Feed
                 }
             }
 
-            $product['description'] = strip_tags($product['description']);
+            $product['description'] = $product['description'] ? strip_tags($product['description']) : $product['description'];
 
             //Added in 1.0.11 to remove spaces
-            $product['description'] = preg_replace('~[\r\n\t]+~', '', $product['description']);
+            $product['description'] = $product['description'] ? preg_replace('~[\r\n\t]+~', '', $product['description']) : $product['description'];
 
             if($this->_retailRocketHelper->removeSpecialCharsDescription())
             {
@@ -2034,7 +2034,7 @@ class Feed
 
                     if($this->_retailRocketHelper->hasHtml($website['description']))
                     {
-                        $website['description'] = strip_tags($website['description']);
+                        $website['description'] = $website['description'] ? strip_tags($website['description']) : $website['description'];
 
                         $products .= "<description><![CDATA[{$website['description']}]]></description>";
                     }

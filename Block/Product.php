@@ -23,24 +23,23 @@ class Product extends Tracker
     protected $_retailRocketSession;
 
     /**
-     * Product constructor.
      * @param Template\Context $context
-     * @param Data $helper
-     * @param Session $retailRocketSession
-     * @param array $data
-     * @param Customer $customer
+     * @param Data             $helper
+     * @param Session          $retailRocketSession
+     * @param Customer         $customer
+     * @param array            $data
      */
     public function __construct(
         Template\Context $context,
         Data $helper,
         Session $retailRocketSession,
-        array $data = [],
-        Customer $customer
+        Customer $customer,
+        array $data = []
     )
     {
         $this->_retailRocketSession = $retailRocketSession;
 
-        parent::__construct($context, $helper, $data,$customer);
+        parent::__construct($context, $helper,$customer,$data);
     }
 
     /**
