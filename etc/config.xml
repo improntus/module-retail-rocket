@@ -18,6 +18,7 @@
                 <always_subscribe_customer_email>1</always_subscribe_customer_email>
                 <enable_single_feed>0</enable_single_feed>
                 <cron_expression>0 * * * *</cron_expression>
+                <qty_categories_to_send>1</qty_categories_to_send>
             </configuration>
         </retailrocket>
     </default>

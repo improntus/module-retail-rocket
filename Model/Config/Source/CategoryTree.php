@@ -3,7 +3,7 @@
 namespace Improntus\RetailRocket\Model\Config\Source;
 
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as CategoryCollectionFactory;
-use Magento\Framework\Option\ArrayInterface;
+use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Class CategoryTree
@@ -13,7 +13,7 @@ use Magento\Framework\Option\ArrayInterface;
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Model\Config\Source
  */
-class CategoryTree implements ArrayInterface
+class CategoryTree implements OptionSourceInterface
 {
     /**
      * @var CategoryCollectionFactory

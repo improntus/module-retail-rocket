@@ -1,5 +1,11 @@
 CHANGELOG
 ---------
+### 1.0.15
+
+- Compatibility upgrade with Magento 2.4.6
+- Added es_PE translations
+- Added "Quantity of categories to send in feed" option to select how many <categoryId> tags you want to send in feed
+- Fix on price calculation for catalog rules 
 
 ### 1.0.14
 

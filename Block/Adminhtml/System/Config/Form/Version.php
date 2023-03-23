@@ -55,8 +55,16 @@ class Version extends \Magento\Config\Block\System\Config\Form\Field
     {
         $moduleVersion = $this->getVersion();
 
-        $html = '<tr><td class="label" colspan="4" style="text-align: left;"><div style="padding:10px;background-color:#f8f8f8;border:1px solid #ddd;margin-bottom:7px;">
-            <a href="https://retailrocket.net/">RetailRocket</a> integration. Version: ' . $moduleVersion . '</div></td></tr>';
+        $html = '<tr>
+            <td class="label" colspan="4" style="text-align: left;">
+                <div style="padding:10px;background-color:#f8f8f8;border:1px solid #ddd;margin-bottom:7px;">
+                    <a href="https://retailrocket.net/">RetailRocket</a> integration. <strong>Version</strong>:
+                    <a href="https://github.com/improntus/module-retail-rocket/releases">' . $moduleVersion . '</a>
+                    <br>
+                    <a href="https://github.com/improntus/module-retail-rocket/wiki">'. __('User Manual / Wiki') . '</a>
+                </div>
+                </td>
+            </tr>';
 
         return $html;
     }

@@ -220,13 +220,21 @@ class Data extends AbstractHelper
     }
 
     /**
+     * @return int
+     */
+    public function getQtyCategoriesToSend()
+    {
+        return (int)$this->scopeConfig->getValue('retailrocket/configuration/qty_categories_to_send', ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
      * @return string|null
      */
     public function getProductCreationStartDate()
     {
         $productCreationStartDate  = $this->scopeConfig->getValue('retailrocket/configuration/product_creation_start_date', ScopeInterface::SCOPE_STORE);
 
-        $isValidDate = (bool)strtotime($productCreationStartDate);
+        $isValidDate = $productCreationStartDate ? strtotime($productCreationStartDate) : false;
 
         if($isValidDate)
         {
@@ -433,7 +441,7 @@ class Data extends AbstractHelper
 
     /**
      * @param $product
-     * @return float
+     * @return float[]
      */
     public function getConfigurablePrice($product)
     {
@@ -456,39 +464,29 @@ class Data extends AbstractHelper
             /** @var \Magento\Store\Model\StoreManager */
             $this->_storeManager->setCurrentStore($storeId);
             $prices = [];
+            $originalPrices = [];
 
             foreach ($collection as $_simpleItem)
             {
-                $now = $this->_timeZone->date()->format('Y-m-d H:i:s');
-
-                $specialFromDate = $_simpleItem->getSpecialFromDate();
-                $specialToDate = $_simpleItem->getSpecialToDate();
                 $priceSimple = $_simpleItem->getPrice();
-                $specialPrice = $_simpleItem->getSpecialPrice();
 
                 /**
                  * Final price with catalog price rules
                  */
                 $finalPrice = $_simpleItem->getPriceInfo()->getPrice('final_price')->getValue();
 
-                if(!is_null($specialPrice) && $specialPrice != 0
-                    && $specialPrice < $priceSimple && $specialFromDate <= $now && $now <= $specialToDate)
-                {
-                    $prices[] = $specialPrice;
-                }
-                elseif ($finalPrice < $price){
-                    $prices[] = $finalPrice;
-                }
-                else{
-                    $prices[] = $priceSimple;
-                }
+                $prices[] = $priceSimple;
+                $prices[] = $finalPrice;
             }
-
-            //Validation in version 1.0.10
-            $price = (is_array($prices) && count($prices)) ? min($prices) : 0;
         }
 
-        return (float)$price;
+        $minPrice = (is_array($prices) && count($prices)) ? min($prices) : 0;
+        $maxPrice = (is_array($prices) && count($prices)) ? max($prices) : 0;
+
+        return [
+            'base_price'=>(float)$maxPrice,
+            'final_price'=>(float)$minPrice
+        ];
     }
 
     /**
@@ -598,7 +596,7 @@ class Data extends AbstractHelper
      */
     public function hasHtml($string)
     {
-        if($string != strip_tags($string))
+        if(!is_null($string) && $string != strip_tags($string))
         {
             return true;
         }

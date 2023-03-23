@@ -5,7 +5,7 @@ namespace Improntus\RetailRocket\Model\Config\Source;
 use Magento\Catalog\Model\ResourceModel\Category\Collection;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Option\ArrayInterface;
+use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Class RootCategoryId
@@ -15,7 +15,7 @@ use Magento\Framework\Option\ArrayInterface;
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Model\Config\Source
  */
-class RootCategoryId implements ArrayInterface
+class RootCategoryId implements OptionSourceInterface
 {
     /**
      * Category collection factory

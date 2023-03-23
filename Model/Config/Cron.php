@@ -2,6 +2,7 @@
 namespace Improntus\RetailRocket\Model\Config;
 
 use Magento\Framework\Exception\LocalizedException;
+use Laminas\Validator\Regex;
 
 /**
  * Class Cron
@@ -21,11 +22,9 @@ class Cron extends \Magento\Framework\App\Config\Value
     public function beforeSave()
     {
         $value     = $this->getValue();
-        $validator = \Zend_Validate::is(
-            $value,
-            'Regex',
-            ['pattern' => '/^[0-9,\-\?\/\*\ ]+$/']
-        );
+
+        $validator = new Regex(['pattern' => '/^[0-9,\-\?\/\*\ ]+$/']);
+        $validator->isValid($value); // returns true
 
         if (!$validator) {
             $message = __(

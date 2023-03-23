@@ -17,7 +17,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Filesystem\File\Write;
-use Magento\Framework\UrlInterface;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -26,7 +25,6 @@ use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection as AttributeCollection;
 use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as ConfigurableProduct;
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Catalog\Helper\Image;
 
 /**
  * Class Feed
@@ -485,11 +483,11 @@ class Feed
 
                 if(is_array($categoryIds) && $categoryIdsQty)
                 {
-                    if($categoryIdsQty == 1)
+                    if($categoryIdsQty == 1 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 1)
                     {
                         $lastCategoryId = [end($categoryIds)];
                     }
-                    if ($categoryIdsQty >= 2)
+                    if ($categoryIdsQty >= 2 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 2)
                     {
                         $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
                     }
@@ -559,11 +557,11 @@ class Feed
 
                     if(is_array($categoryIds) && $categoryIdsQty)
                     {
-                        if($categoryIdsQty == 1)
+                        if($categoryIdsQty == 1 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 1)
                         {
                             $lastCategoryId = [end($categoryIds)];
                         }
-                        if ($categoryIdsQty >= 2)
+                        if ($categoryIdsQty >= 2 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 2)
                         {
                             $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
                         }
@@ -610,7 +608,7 @@ class Feed
             }
 
             $price = (float)$product->getData('price');
-            $finalPrice = (float)$product->getData('final_price');
+            $finalPrice = (float)$product->getPriceInfo()->getPrice('final_price')->getValue();
             $specialPrice = $product->getData('special_price');
             $specialFromDate = $product->getData('special_from_date');
             $specialToDate = $product->getData('special_to_date');
@@ -635,10 +633,10 @@ class Feed
             {
                 $groupId = $product->getId();
 
-                if($finalPrice == 0)
-                {
-                    $finalPrice = $this->_retailRocketHelper->getConfigurablePrice($product);
-                }
+                $configurablePrices = $this->_retailRocketHelper->getConfigurablePrice($product);
+
+                $finalPrice = $minimalPrice = $configurablePrices['final_price'] ?? 0;
+                $price = $configurablePrices['base_price'] ?? 0;
 
                 $configurableAttributes = $product->getTypeInstance()->getConfigurableOptions($product);
                 $options = [];
@@ -671,11 +669,11 @@ class Feed
 
                 if(is_array($categoryIds) && $categoryIdsQty)
                 {
-                    if($categoryIdsQty == 1)
+                    if($categoryIdsQty == 1 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 1)
                     {
                         $lastCategoryId = [end($categoryIds)];
                     }
-                    if ($categoryIdsQty >= 2)
+                    if ($categoryIdsQty >= 2 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 2)
                     {
                         $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
                     }
@@ -893,11 +891,11 @@ class Feed
 
                 if(is_array($categoryIds) && $categoryIdsQty)
                 {
-                    if($categoryIdsQty == 1)
+                    if($categoryIdsQty == 1 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 1)
                     {
                         $lastCategoryId = [end($categoryIds)];
                     }
-                    if ($categoryIdsQty >= 2)
+                    if ($categoryIdsQty >= 2 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 2)
                     {
                         $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
                     }
@@ -942,6 +940,12 @@ class Feed
                 if($applySpecial)
                 {
                     $result[$i]['price'] = (float)$specialPrice;
+                    $result[$i]['oldprice'] = $price;
+                }
+
+                if($finalPrice != 0 && $finalPrice < $price)
+                {
+                    $result[$i]['price'] = $finalPrice;
                     $result[$i]['oldprice'] = $price;
                 }
 
@@ -1018,11 +1022,11 @@ class Feed
 
                 if(is_array($categoryIds) && $categoryIdsQty)
                 {
-                    if($categoryIdsQty == 1)
+                    if($categoryIdsQty == 1 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 1)
                     {
                         $lastCategoryId = [end($categoryIds)];
                     }
-                    if ($categoryIdsQty >= 2)
+                    if ($categoryIdsQty >= 2 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 2)
                     {
                         $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
                     }
@@ -1113,11 +1117,11 @@ class Feed
                     $categoryIdsQty = count($categoryIds);
                     if(is_array($categoryIds) && $categoryIdsQty)
                     {
-                        if($categoryIdsQty == 1)
+                        if($categoryIdsQty == 1 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 1)
                         {
                             $lastCategoryId = [end($categoryIds)];
                         }
-                        if ($categoryIdsQty >= 2)
+                        if ($categoryIdsQty >= 2 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 2)
                         {
                             $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
                         }
@@ -1240,7 +1244,7 @@ class Feed
 
                         $result[$i]['stock'][$webisteCode]['available'] = $productAvailable;
 
-//                        $finalPrice = (float)$product->getData('final_price');
+//                        $finalPrice = (float)$product->getPriceInfo()->getPrice('final_price')->getValue();
                         $specialPrice = $product->getData('special_price');
                         $specialFromDate = $product->getData('special_from_date');
                         $specialToDate = $product->getData('special_to_date');
@@ -1275,7 +1279,7 @@ class Feed
             }
 
             $price = (float)$product->getData('price');
-            $finalPrice = (float)$product->getData('final_price');
+            $finalPrice = (float)$product->getPriceInfo()->getPrice('final_price')->getValue();
             $specialPrice = $product->getData('special_price');
             $specialFromDate = $product->getData('special_from_date');
             $specialToDate = $product->getData('special_to_date');
@@ -1325,11 +1329,11 @@ class Feed
 
                 if(is_array($categoryIds) && $categoryIdsQty)
                 {
-                    if($categoryIdsQty == 1)
+                    if($categoryIdsQty == 1 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 1)
                     {
                         $lastCategoryId = [end($categoryIds)];
                     }
-                    if ($categoryIdsQty >= 2)
+                    if ($categoryIdsQty >= 2 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 2)
                     {
                         $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
                     }
@@ -1491,11 +1495,11 @@ class Feed
 
                     if(is_array($categoryIds) && $categoryIdsQty)
                     {
-                        if($categoryIdsQty == 1)
+                        if($categoryIdsQty == 1 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 1)
                         {
                             $lastCategoryId = [end($categoryIds)];
                         }
-                        if ($categoryIdsQty >= 2)
+                        if ($categoryIdsQty >= 2 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 2)
                         {
                             $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
                         }
@@ -1624,11 +1628,11 @@ class Feed
 
                 if(is_array($categoryIds) && $categoryIdsQty)
                 {
-                    if($categoryIdsQty == 1)
+                    if($categoryIdsQty == 1 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 1)
                     {
                         $lastCategoryId = [end($categoryIds)];
                     }
-                    if ($categoryIdsQty >= 2)
+                    if ($categoryIdsQty >= 2 && $this->_retailRocketHelper->getQtyCategoriesToSend() == 2)
                     {
                         $lastCategoryId = [$categoryIds[$categoryIdsQty-1],$categoryIds[$categoryIdsQty-2]];
                     }
@@ -1943,20 +1947,20 @@ class Feed
                 $product['name'] = $this->_retailRocketHelper->cleanString($product['name']);
             }
 
-            if(strlen($product['description']) >= 200)
+            if(!is_null($product['description']) && strlen($product['description']) >= 200)
             {
                 $product['description'] = substr($product['description'],0,190);
                 $product['description'] = $this->_retailRocketHelper->replaceXmlEntities($product['description']);
 
                 //1.0.10 max length added
                 $descriptionMaxLength = $this->_retailRocketHelper->getDescriptionAttributeMaxLength();
-                if($descriptionMaxLength > 0 && strlen($product['description']) > $descriptionMaxLength)
+                if($descriptionMaxLength > 0 && !is_null($product['description']) && strlen($product['description']) > $descriptionMaxLength)
                 {
                     $product['description'] = substr($product['description'],0,$descriptionMaxLength);
                 }
 
                 //1.0.9
-                $product['description'] = substr_replace($product['description'],'...',-3,3);
+                $product['description'] = !is_null($product['description']) ? substr_replace($product['description'],'...',-3,3) : $product['description'];
             }
 
             $product['description'] = $this->_retailRocketHelper->replaceXmlEntities($product['description']);
@@ -2026,7 +2030,7 @@ class Feed
                         $website['description'] = $this->_retailRocketHelper->cleanString($website['description']);
                     }
 
-                    if(strlen($website['description']) >= 200)
+                    if(!is_null($website['description']) && strlen($website['description']) >= 200)
                     {
                         $website['description'] = substr($product['description'],0,190);
                         $website['description'] = $this->_retailRocketHelper->replaceXmlEntities($product['description']);

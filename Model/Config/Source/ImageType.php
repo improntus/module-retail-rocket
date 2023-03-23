@@ -2,7 +2,7 @@
 
 namespace Improntus\RetailRocket\Model\Config\Source;
 
-use Magento\Framework\Option\ArrayInterface;
+use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Class ExtraAttributes
@@ -12,7 +12,7 @@ use Magento\Framework\Option\ArrayInterface;
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Model\Config\Source
  */
-class ImageType implements ArrayInterface
+class ImageType implements OptionSourceInterface
 {
     /**
      * Options getter

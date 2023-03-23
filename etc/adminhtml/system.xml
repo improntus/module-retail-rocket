@@ -103,6 +103,11 @@
                     <source_model>Improntus\RetailRocket\Model\Config\Source\CategoryTree</source_model>
                     <can_be_empty>1</can_be_empty>
                 </field>
+                <field id="qty_categories_to_send" translate="label comment" type="select" sortOrder="45" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Quantity of categories to send in feed</label>
+                    <comment><![CDATA[Quantity of categories to send in <strong>&lt;categoryId &gt;</strong> tag.]]></comment>
+                    <source_model>Improntus\RetailRocket\Model\Config\Source\QtyCategories</source_model>
+                </field>
                 <group id="stockid" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Stock Id Mode</label>
                     <field id="enable" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">

@@ -12,3 +12,6 @@
 "Always subscribe customer email in checkout success page","Suscribir al cliente a novedades automáticamente luego de una compra exitosa"
 "Click ""Generate Retail Rocket Feed"" button below. After the process is done every store you have in Magento will have one xml feed.","Click ""Generate Retail Rocket Feed"" button below. After the process is done every store you have in Magento will have one xml feed."
 "Generate Retail Rocket Feed Manually","Generar el feed xml de Retail Rocket manualmente"
+"Last category","Última categoría"
+"Last 2 categories","Últimas 2 categorías"
+"Quantity of categories to send in feed","Cantidad de categorías a enviar en feed"
