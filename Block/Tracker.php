@@ -11,7 +11,7 @@ use Magento\Sales\Model\Order;
 /**
  * Class Tracker
  *
- * @version 1.0.14
+ * @version 1.0.15
  * @author Improntus <https://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Block
