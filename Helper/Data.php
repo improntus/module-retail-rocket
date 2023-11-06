@@ -2,16 +2,16 @@
 
 namespace Improntus\RetailRocket\Helper;
 
+use Improntus\RetailRocket\Model\Session;
+use Magento\Catalog\Helper\Image;
 use Magento\Catalog\Model\Product\Visibility;
-use Magento\ConfigurableProduct\Pricing\Price\LowestPriceOptionsProviderInterface;
+use Magento\Catalog\Model\ProductFactory;
+use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
-use Improntus\RetailRocket\Model\Session;
-use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Filesystem;
-use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository;
@@ -19,8 +19,6 @@ use Magento\Sales\Model\Order;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
-use Magento\Catalog\Model\ProductFactory;
-use Magento\Catalog\Helper\Image;
 
 /**
  * Class Data
@@ -107,8 +105,7 @@ class Data extends AbstractHelper
         TimezoneInterface $timezone,
         Image $imageHelper,
         Repository $viewAssetRepository
-    )
-    {
+    ) {
         $this->_retailRocketSession = $session;
         $this->_checkoutSession = $checkoutSession;
         $this->_fileSystem = $filesystem;
@@ -136,7 +133,7 @@ class Data extends AbstractHelper
      */
     public function isSingleXmlFeedEnabled($scopeCode = null)
     {
-        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/enable_single_feed',ScopeInterface::SCOPE_WEBSITES,$scopeCode);
+        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/enable_single_feed', ScopeInterface::SCOPE_WEBSITES, $scopeCode);
     }
 
     /**
@@ -232,15 +229,13 @@ class Data extends AbstractHelper
      */
     public function getProductCreationStartDate()
     {
-        $productCreationStartDate  = $this->scopeConfig->getValue('retailrocket/configuration/product_creation_start_date', ScopeInterface::SCOPE_STORE);
+        $productCreationStartDate = $this->scopeConfig->getValue('retailrocket/configuration/product_creation_start_date', ScopeInterface::SCOPE_STORE);
 
-        $isValidDate = $productCreationStartDate ? strtotime($productCreationStartDate) : false;
+        $isValidDate = $productCreationStartDate && strtotime($productCreationStartDate);
 
-        if($isValidDate)
-        {
+        if ($isValidDate) {
             return $productCreationStartDate;
-        }
-        else{
+        } else {
             return null;
         }
     }
@@ -250,7 +245,7 @@ class Data extends AbstractHelper
      */
     public function getStockIdCategoriesIds()
     {
-        return explode(',',$this->scopeConfig->getValue('retailrocket/configuration/stockid/root_category_ids'));
+        return explode(',', $this->scopeConfig->getValue('retailrocket/configuration/stockid/root_category_ids'));
     }
 
     /**
@@ -259,6 +254,14 @@ class Data extends AbstractHelper
     public function removeSpecialCharsDescription()
     {
         return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/remove_special_chars_description');
+    }
+
+    /**
+     * @return bool
+     */
+    public function addStoreParamToProductUrl()
+    {
+        return (boolean)$this->scopeConfig->getValue('retailrocket/configuration/add_store_param_to_product_url');
     }
 
     /**
@@ -284,8 +287,8 @@ class Data extends AbstractHelper
     {
         $excludedCategories = $this->scopeConfig->getValue('retailrocket/configuration/exclude_categories');
 
-        if($excludedCategories){
-            $excludedCategories = explode(',',$excludedCategories);
+        if ($excludedCategories) {
+            $excludedCategories = explode(',', $excludedCategories);
         }
 
         return $excludedCategories;
@@ -319,19 +322,15 @@ class Data extends AbstractHelper
 
         $mediaFiles = scandir($mediapath);
 
-        if(is_array($mediaFiles))
-        {
+        if (is_array($mediaFiles)) {
             $retailRocketFiles = [];
 
-            foreach ($mediaFiles as $mediaFile)
-            {
-                if(strpos($mediaFile,'retailrocket-feed-') === 0)
-                {
-                    $storeId = explode('-',$mediaFile);
-                    $storeId = isset($storeId[2]) ? explode('.',$storeId[2]) : null;
+            foreach ($mediaFiles as $mediaFile) {
+                if (strpos($mediaFile, 'retailrocket-feed-') === 0) {
+                    $storeId = explode('-', $mediaFile);
+                    $storeId = isset($storeId[2]) ? explode('.', $storeId[2]) : null;
 
-                    if(is_array($storeId) && isset($storeId[0]))
-                    {
+                    if (is_array($storeId) && isset($storeId[0])) {
                         $retailRocketFiles[$storeId[0]] = [
                             'store_id' => $storeId[0],
                             'file' => $mediaFile,
@@ -342,12 +341,10 @@ class Data extends AbstractHelper
                 }
             }
 
-            foreach ($stores as $store)
-            {
+            foreach ($stores as $store) {
                 $storeId = $store->getId();
 
-                if(isset($retailRocketFiles[$storeId]))
-                {
+                if (isset($retailRocketFiles[$storeId])) {
                     $retailRocketFiles[$storeId]['store_name'] = $store->getName();
                     $retailRocketFiles[$storeId]['link'] = $store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA) .
                         $retailRocketFiles[$storeId]['file'];
@@ -356,8 +353,7 @@ class Data extends AbstractHelper
                 }
             }
 
-            if(isset($retailRocketFiles['stockid']))
-            {
+            if (isset($retailRocketFiles['stockid'])) {
                 $store = reset($stores);
 
                 $retailRocketFiles['stockid']['store_name'] = __('XML file with StockId');
@@ -376,11 +372,9 @@ class Data extends AbstractHelper
      */
     public function getOrder()
     {
-        if(!$this->_order)
-        {
+        if (!$this->_order) {
             $this->_order = $this->_checkoutSession->getLastRealOrder();
         }
-
         return $this->_order;
     }
 
@@ -389,11 +383,9 @@ class Data extends AbstractHelper
      */
     public function getCurrentStoreCode()
     {
-        try{
+        try {
             return $this->_storeManager->getStore()->getCode();
-        }
-        catch (LocalizedException $exception)
-        {
+        } catch (LocalizedException $exception) {
             $this->_logger->error($exception);
             return null;
         }
@@ -407,12 +399,11 @@ class Data extends AbstractHelper
     {
         $result = '';
 
-        if (empty($value))
-        {
+        if (empty($value)) {
             return $result;
         }
 
-        $utf8 = array(
+        $utf8 = [
             '/[áàâãªä]/u'   =>   'a',
             '/[ÁÀÂÃÄ]/u'    =>   'A',
             '/[ÍÌÎÏ]/u'     =>   'I',
@@ -433,60 +424,60 @@ class Data extends AbstractHelper
             '/ /'           =>   ' ', // nonbreaking space (equiv. to 0x160)
             '/©/'           =>   '',
             '/®/'           =>   '',
-            '/™/'           =>   ''
-        );
+            '/™/'           =>   '',
+        ];
 
         return preg_replace(array_keys($utf8), array_values($utf8), $value);
     }
 
     /**
      * @param $product
-     * @return float[]
+     * @return array
      */
     public function getConfigurablePrice($product)
     {
-        $price = null;
+        $configurablePrices['min'] = 0;
+        $configurablePrices['max'] = 0;
 
         $simpleProductsIds = $product->getTypeInstance()->getUsedProductIds($product);
-
-        if(count($simpleProductsIds))
-        {
-            $productStore = $product->getStore();
-            $websiteId = $productStore->getWebsiteId();
-            $storeId = $productStore->getId();
-
+        if (count($simpleProductsIds)) {
             $productModel = $this->_productFactory->create();
             $collection = $productModel->getCollection()
                 ->addAttributeToSelect('*')
-                ->addAttributeToFilter('entity_id',['in'=>implode(',',$simpleProductsIds)]);
-            $collection->addWebsiteFilter([$websiteId]);
+                ->addAttributeToFilter('entity_id', ['in' => implode(',', $simpleProductsIds)]);
+            $collection->addWebsiteFilter([$product->getStore()->getWebsiteId()]);
 
-            /** @var \Magento\Store\Model\StoreManager */
-            $this->_storeManager->setCurrentStore($storeId);
             $prices = [];
-            $originalPrices = [];
 
-            foreach ($collection as $_simpleItem)
-            {
+            foreach ($collection as $_simpleItem) {
+                $now = strtotime($this->_timeZone->date()->format('Y-m-d H:i:s'));
+
+                $specialFromDate = $_simpleItem->getSpecialFromDate();
+                $specialToDate = $_simpleItem->getSpecialToDate();
                 $priceSimple = $_simpleItem->getPrice();
+                $specialPrice = $_simpleItem->getSpecialPrice();
 
-                /**
-                 * Final price with catalog price rules
-                 */
-                $finalPrice = $_simpleItem->getPriceInfo()->getPrice('final_price')->getValue();
+                if (!is_null($specialPrice) && $specialPrice < $priceSimple) {
+                    if ((is_null($specialFromDate) && is_null($specialToDate))
+                        || ($now >= strtotime($specialFromDate) && is_null($specialToDate))
+                        || ($now <= strtotime($specialToDate) && is_null($specialFromDate))
+                        || ($now >= strtotime($specialFromDate) && $now <= strtotime($specialToDate))) {
+                        $prices[] = $specialPrice;
+                    } else {
+                        $prices[] = $priceSimple;
+                    }
+                } else {
+                    $prices[] = $priceSimple;
+                }
+            }
 
-                $prices[] = $priceSimple;
-                $prices[] = $finalPrice;
+            if (is_array($prices) && count($prices)) {
+                $configurablePrices['min'] = (float)min($prices);
+                $configurablePrices['max'] = (float)max($prices);
             }
         }
 
-        $minPrice = (is_array($prices) && count($prices)) ? min($prices) : 0;
-        $maxPrice = (is_array($prices) && count($prices)) ? max($prices) : 0;
-
-        return [
-            'base_price'=>(float)$maxPrice,
-            'final_price'=>(float)$minPrice
-        ];
+        return $configurablePrices;
     }
 
     /**
@@ -500,12 +491,10 @@ class Data extends AbstractHelper
 
         $simpleProducts = $product->getTypeInstance()->getAssociatedProducts($product);
 
-        if(count($simpleProducts))
-        {
+        if (count($simpleProducts)) {
             $prices = [];
 
-            foreach ($simpleProducts as $_simpleItem)
-            {
+            foreach ($simpleProducts as $_simpleItem) {
                 $now = $this->_timeZone->date()->format('Y-m-d H:i:s');
 
                 $specialFromDate = $_simpleItem->getSpecialFromDate();
@@ -513,12 +502,10 @@ class Data extends AbstractHelper
                 $priceSimple = $_simpleItem->getPrice();
                 $specialPrice = $_simpleItem->getSpecialPrice();
 
-                if(!is_null($specialPrice) && $specialPrice != 0
-                    && $specialPrice < $priceSimple && $specialFromDate <= $now && $now <= $specialToDate)
-                {
+                if (!is_null($specialPrice) && $specialPrice != 0
+                    && $specialPrice < $priceSimple && $specialFromDate <= $now && $now <= $specialToDate) {
                     $prices[] = $specialPrice;
-                }
-                else{
+                } else {
                     $prices[] = $priceSimple;
                 }
             }
@@ -542,10 +529,9 @@ class Data extends AbstractHelper
             ->addAttributeToSelect('final_price')
             ->addPriceData(null, $websiteId)
             ->addWebsiteFilter($websiteId)
-            ->addAttributeToFilter('entity_id',['eq'=>$productId]);
+            ->addAttributeToFilter('entity_id', ['eq'=>$productId]);
 
-        if($product->getSize())
-        {
+        if ($product->getSize()) {
             $finalPrice = $product->getFirstItem();
             $finalPrice = $finalPrice->getData('final_price');
 
@@ -561,11 +547,11 @@ class Data extends AbstractHelper
      * @param string $attributeType
      * @return string
      */
-    public function getAttributeValue($product,$attributeCode,$attributeType)
+    public function getAttributeValue($product, $attributeCode, $attributeType)
     {
-        return $attributeType == 'select' || $attributeType == 'multiselect' ? $this->replaceXmlEntities($product->getResource()
-                                                                                                                 ->getAttribute($attributeCode)->getFrontend()->getValue($product)
-        ) : $this->replaceXmlEntities($product->getData($attributeCode));
+        return ($attributeType == 'select' || $attributeType == 'multiselect')
+            ? $this->replaceXmlEntities($product->getResource()->getAttribute($attributeCode)->getFrontend()->getValue($product))
+            : $this->replaceXmlEntities($product->getData($attributeCode));
     }
 
     /**
@@ -574,20 +560,16 @@ class Data extends AbstractHelper
      */
     public function replaceXmlEntities($string)
     {
-        if($string){
-            return strtr(
-                $string,
-                array(
-                    "<" => "&lt;",
-                    ">" => "&gt;",
-                    '"' => "&quot;",
-                    "'" => "&apos;",
-                    "&" => "&amp;",
-                )
-            );
+        if ($string) {
+            return strtr($string, [
+                "<" => "&lt;",
+                ">" => "&gt;",
+                '"' => "&quot;",
+                "'" => "&apos;",
+                "&" => "&amp;",
+            ]);
         }
-        else
-            return $string;
+        return $string;
     }
 
     /**
@@ -596,11 +578,9 @@ class Data extends AbstractHelper
      */
     public function hasHtml($string)
     {
-        if(!is_null($string) && $string != strip_tags($string))
-        {
+        if (!is_null($string) && $string != strip_tags($string)) {
             return true;
         }
-
         return false;
     }
 
@@ -611,20 +591,16 @@ class Data extends AbstractHelper
      */
     public function getProductImageUrl($product, $parentImage = null)
     {
-        if(!$product->getSmallImage() || $product->getSmallImage() == 'no_selection')
-        {
-            if($parentImage)
-            {
+        if (!$product->getSmallImage() || $product->getSmallImage() == 'no_selection') {
+            if ($parentImage) {
                 return $parentImage;
-            }else{
+            } else {
                 return $this->_viewAssetRepo->getUrlWithParams(
-                    'Magento_Catalog::images/product/placeholder/image.jpg' ,
+                    'Magento_Catalog::images/product/placeholder/image.jpg',
                     ['area' => 'frontend']
                 );
             }
-        }
-        else
-        {
+        } else {
             $ProductImageType = $this->getXmlProductImageType();
 
             $imageUrl = $this->_imageHelper
@@ -633,9 +609,8 @@ class Data extends AbstractHelper
                 ->resize(380)
                 ->getUrl();
 
-            if($this->getRemovePub() && false !== strpos($imageUrl,'pub/'))
-            {
-                return str_replace('pub/','',$imageUrl);
+            if ($this->getRemovePub() && false !== strpos($imageUrl, 'pub/')) {
+                return str_replace('pub/', '', $imageUrl);
             }
 
             return $imageUrl;
@@ -649,29 +624,26 @@ class Data extends AbstractHelper
      * @param $specialToDate
      * @return bool
      */
-    public function applySpecialPrice($price,$specialPrice,$specialFromDate,$specialToDate)
+    public function applySpecialPrice($price, $specialPrice, $specialFromDate, $specialToDate)
     {
         $now = strtotime($this->_timeZone->date()->format('Y-m-d H:i:s'));
 
         $specialPrice = (float) $specialPrice;
         $price = (float) $price;
 
-        if(is_null($specialPrice) || $specialPrice == 0)
+        if (is_null($specialPrice) || $specialPrice == 0) {
             return false;
+        }
 
-        if($specialPrice < $price)
-        {
+        if ($specialPrice < $price) {
             if ((is_null($specialFromDate) &&is_null($specialToDate))
                 || ($now >= strtotime($specialFromDate) && is_null($specialToDate))
                 || ($now <= strtotime($specialToDate) &&is_null($specialFromDate))
-                || ($now >= strtotime($specialFromDate) && $now <= strtotime($specialToDate)))
-            {
+                || ($now >= strtotime($specialFromDate) && $now <= strtotime($specialToDate))) {
                 return true;
             }
         }
-        else{
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -691,12 +663,11 @@ class Data extends AbstractHelper
      */
     public function removeUrlStoreParams($url)
     {
-        $queryParams = parse_url($url,PHP_URL_QUERY);
+        $queryParams = parse_url($url, PHP_URL_QUERY);
 
-        if($queryParams && strpos($url,$queryParams) !== false)
-        {
-            $url = str_replace($queryParams,'',$url);
-            $url = str_replace('?','',$url);
+        if ($queryParams && strpos($url, $queryParams) !== false) {
+            $url = str_replace($queryParams, '', $url);
+            $url = str_replace('?', '', $url);
         }
 
         return $url;

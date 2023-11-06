@@ -1,5 +1,10 @@
 CHANGELOG
 ---------
+
+### 1.0.16 (2023-11-06)
+- Add store id to product url (optional by config). 
+- Change the way to get the price of configurable products.
+
 ### 1.0.15
 
 - Compatibility upgrade with Magento 2.4.6
