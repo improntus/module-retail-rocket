@@ -15,4 +15,9 @@
 "Last category","Última categoría"
 "Last 2 categories","Últimas 2 categorías"
 "Quantity of categories to send in feed","Cantidad de categorías a enviar en feed"
+"User Manual","Manual de usuario"
 "User Manual / Wiki","Manual de usuario / Wiki"
+"Add Store param to Product URL","Agregar el parámetro store a la URL del producto"
+"It will add ?___store={store_code}","Agregará ?___store={store_code}"
+
+

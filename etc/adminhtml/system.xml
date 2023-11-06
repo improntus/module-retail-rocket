@@ -89,7 +89,7 @@
                 </field>
                 <field id="add_store_param_to_product_url" translate="label comment" type="select" sortOrder="41" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Add Store param to Product URL</label>
-                    <comment>It will add: ?___store=oxfordcl_store_view</comment>
+                    <comment>It will add ?___store={store_code}</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="product_creation_start_date" translate="label comment" type="date" sortOrder="42" showInDefault="1" showInWebsite="1" showInStore="1">

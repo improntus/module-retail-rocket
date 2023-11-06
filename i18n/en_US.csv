@@ -16,3 +16,5 @@
 "Last 2 categories","Last 2 categories"
 "Quantity of categories to send in feed","Quantity of categories to send in feed"
 "User Manual / Wiki","User Manual / Wiki"
+"Add Store param to Product URL","Add Store param to Product URL"
+"It will add ?___store={store_code}","It will add ?___store={store_code}"
