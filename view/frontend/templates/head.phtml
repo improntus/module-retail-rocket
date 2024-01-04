@@ -1,8 +1,11 @@
-<?php /** @var \Improntus\RetailRocket\Block\Tracker $block */?>
+<?php
+/** @var \Improntus\RetailRocket\Block\Tracker $block */
+/** @var Magento\Framework\Escaper $escaper */
+?>
 
 <!-- BEGIN RETAIL ROCKET INTEGRATION -->
 <script type="text/javascript">
-    var rrPartnerId = "<?= $block->escapeHtml($block->getPartnerId())?>";
+    var rrPartnerId = "<?= $escaper->escapeHtml($block->getPartnerId())?>";
     var rrApi = {};
     var rrApiOnReady = rrApiOnReady || [];
     rrApi.addToBasket = rrApi.order = rrApi.categoryView = rrApi.view =
