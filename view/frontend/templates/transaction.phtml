@@ -18,10 +18,10 @@ foreach ($order->getAllItems() as $item)
 
     if($item->getParentItem())
     {
-        $itemPrice = $item->getParentItem()->getPrice();
+        $itemPrice = $item->getParentItem()->getPriceInclTax();
     }
     else{
-        $itemPrice = $item->getPrice();
+        $itemPrice = $item->getPriceInclTax();
     }
 
     $orderItems[] = [
