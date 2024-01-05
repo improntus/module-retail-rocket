@@ -744,7 +744,15 @@ class Feed
      */
     protected function formatUrl($url)
     {
-        if (!$this->_retailRocketHelper->addStoreParamToProductUrl()) {
+        $paramUrl = $this->_retailRocketHelper->addStoreParamToProductUrl();
+
+        if (!$paramUrl)
+        {
+            if ($temp = strstr($url, '?', true))
+            {
+                $url = $temp;
+            }
+
             return $url;
         }
 
