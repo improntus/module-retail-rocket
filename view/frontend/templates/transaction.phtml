@@ -27,7 +27,7 @@ foreach ($order->getAllItems() as $item)
     $orderItems[] = [
             'id'  => (int)$item->getProduct()->getId(),
             'qnt' => (int)$item->getQtyOrdered(),
-            'price' => (int)$itemPrice
+            'price' => (float)$itemPrice
     ];
 }
 
