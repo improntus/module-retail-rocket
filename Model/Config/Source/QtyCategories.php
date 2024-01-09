@@ -8,7 +8,7 @@ use Magento\Framework\Data\OptionSourceInterface;
 /**
  * Class QtyCategories
  *
- * @version 1.0.15
+ * @version 1.0.17
  * @author Improntus <https://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Improntus\RetailRocket\Model\Config\Source

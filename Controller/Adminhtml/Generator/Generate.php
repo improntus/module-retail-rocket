@@ -13,7 +13,7 @@ use Magento\Framework\Controller\ResultInterface;
 /**
  * Class Generate
  *
- * @version 1.0.15
+ * @version 1.0.17
  * @author Improntus <https://www.improntus.com> - Ecommerce done right
  * @copyright Copyright (c) 2020 Improntus
  * @package Apptrian\FacebookCatalog\Controller\Adminhtml\Generator
