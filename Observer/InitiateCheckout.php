@@ -12,9 +12,9 @@ use Magento\Framework\Exception\NoSuchEntityException;
 /**
  * Class InitiateCheckout
  *
- * @version 1.0.17
- * @author Improntus <https://www.improntus.com> - Ecommerce done right
- * @copyright Copyright (c) 2020 Improntus
+ * @Version 1.0.18
+ * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Solution Partner
+ * @copyright Copyright (c) 2024 Improntus
  * @package Improntus\RetailRocket\Observer
  */
 class InitiateCheckout implements ObserverInterface

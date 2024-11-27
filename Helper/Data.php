@@ -23,9 +23,9 @@ use Psr\Log\LoggerInterface;
 /**
  * Class Data
  *
- * @version 1.0.17
- * @author Improntus <https://www.improntus.com> - Ecommerce done right
- * @copyright Copyright (c) 2020 Improntus
+ * @Version 1.0.18
+ * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Solution Partner
+ * @copyright Copyright (c) 2024 Improntus
  * @package Improntus\RetailRocket\Helper
  */
 class Data extends AbstractHelper

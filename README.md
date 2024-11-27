@@ -1,5 +1,5 @@
 # Retail Rocket Integration 
-##### Version 1.0.17
+##### Version 1.0.18
 
 ## Instalation Steps
 
@@ -21,7 +21,12 @@
 5. php bin/magento deploy:mode:set production
 ```
 
+## User manual
+
+#### [Wiki English](doc:https://github.com/improntus/module-retail-rocket/wiki/User-Manual-English)
+#### [Wiki Español](doc:https://github.com/improntus/module-retail-rocket/wiki/Manual-de-uso---Espa%C3%B1ol)
+
 ## Author
 
-* Improntus - <https://www.improntus.com> <_Ecommerce done right_/>
+[Improntus](doc:https://www.improntus.com) - Elevating Digital Experience | Adobe Solution Partner
 
