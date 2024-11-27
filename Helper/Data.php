@@ -231,7 +231,7 @@ class Data extends AbstractHelper
     {
         $productCreationStartDate = $this->scopeConfig->getValue('retailrocket/configuration/product_creation_start_date', ScopeInterface::SCOPE_STORE);
 
-        $isValidDate = $productCreationStartDate && strtotime($productCreationStartDate);
+        $isValidDate = $productCreationStartDate && strtotime((string) $productCreationStartDate);
 
         if ($isValidDate) {
             return $productCreationStartDate;
@@ -245,7 +245,7 @@ class Data extends AbstractHelper
      */
     public function getStockIdCategoriesIds()
     {
-        return explode(',', $this->scopeConfig->getValue('retailrocket/configuration/stockid/root_category_ids'));
+        return explode(',', (string) $this->scopeConfig->getValue('retailrocket/configuration/stockid/root_category_ids'));
     }
 
     /**
@@ -288,7 +288,7 @@ class Data extends AbstractHelper
         $excludedCategories = $this->scopeConfig->getValue('retailrocket/configuration/exclude_categories');
 
         if ($excludedCategories) {
-            $excludedCategories = explode(',', $excludedCategories);
+            $excludedCategories = explode(',', (string) $excludedCategories);
         }
 
         return $excludedCategories;
@@ -326,7 +326,7 @@ class Data extends AbstractHelper
             $retailRocketFiles = [];
 
             foreach ($mediaFiles as $mediaFile) {
-                if (strpos($mediaFile, 'retailrocket-feed-') === 0) {
+                if (str_starts_with($mediaFile, 'retailrocket-feed-')) {
                     $storeId = explode('-', $mediaFile);
                     $storeId = isset($storeId[2]) ? explode('.', $storeId[2]) : null;
 
@@ -427,7 +427,7 @@ class Data extends AbstractHelper
             '/™/'           =>   '',
         ];
 
-        return preg_replace(array_keys($utf8), array_values($utf8), $value);
+        return preg_replace(array_keys($utf8), array_values($utf8), (string) $value);
     }
 
     /**
@@ -459,9 +459,9 @@ class Data extends AbstractHelper
 
                 if (!is_null($specialPrice) && $specialPrice < $priceSimple) {
                     if ((is_null($specialFromDate) && is_null($specialToDate))
-                        || ($now >= strtotime($specialFromDate) && is_null($specialToDate))
-                        || ($now <= strtotime($specialToDate) && is_null($specialFromDate))
-                        || ($now >= strtotime($specialFromDate) && $now <= strtotime($specialToDate))) {
+                        || ($now >= strtotime((string) $specialFromDate) && is_null($specialToDate))
+                        || ($now <= strtotime((string) $specialToDate) && is_null($specialFromDate))
+                        || ($now >= strtotime((string) $specialFromDate) && $now <= strtotime((string) $specialToDate))) {
                         $prices[] = $specialPrice;
                     } else {
                         $prices[] = $priceSimple;
@@ -578,10 +578,7 @@ class Data extends AbstractHelper
      */
     public function hasHtml($string)
     {
-        if (!is_null($string) && $string != strip_tags($string)) {
-            return true;
-        }
-        return false;
+        return !is_null($string) && $string != strip_tags($string);
     }
 
     /**
@@ -609,7 +606,7 @@ class Data extends AbstractHelper
                 ->resize(380)
                 ->getUrl();
 
-            if ($this->getRemovePub() && false !== strpos($imageUrl, 'pub/')) {
+            if ($this->getRemovePub() && str_contains($imageUrl, 'pub/')) {
                 return str_replace('pub/', '', $imageUrl);
             }
 
@@ -634,16 +631,10 @@ class Data extends AbstractHelper
         if (is_null($specialPrice) || $specialPrice == 0) {
             return false;
         }
-
-        if ($specialPrice < $price) {
-            if ((is_null($specialFromDate) &&is_null($specialToDate))
-                || ($now >= strtotime($specialFromDate) && is_null($specialToDate))
-                || ($now <= strtotime($specialToDate) &&is_null($specialFromDate))
-                || ($now >= strtotime($specialFromDate) && $now <= strtotime($specialToDate))) {
-                return true;
-            }
-        }
-        return false;
+        return $specialPrice < $price && ((is_null($specialFromDate) &&is_null($specialToDate))
+            || ($now >= strtotime((string) $specialFromDate) && is_null($specialToDate))
+            || ($now <= strtotime((string) $specialToDate) &&is_null($specialFromDate))
+            || ($now >= strtotime((string) $specialFromDate) && $now <= strtotime((string) $specialToDate)));
     }
 
     /**
@@ -665,7 +656,7 @@ class Data extends AbstractHelper
     {
         $queryParams = parse_url($url, PHP_URL_QUERY);
 
-        if ($queryParams && strpos($url, $queryParams) !== false) {
+        if ($queryParams && str_contains($url, $queryParams)) {
             $url = str_replace($queryParams, '', $url);
             $url = str_replace('?', '', $url);
         }

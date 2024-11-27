@@ -147,10 +147,10 @@ class Index extends \Magento\Checkout\Controller\Cart
      */
     public function execute()
     {
-        $sku = $this->getRequest()->getParam('sku') ? explode(',',$this->getRequest()->getParam('sku')) : null;
-        $qty = $this->getRequest()->getParam('qty') ? explode(',',$this->getRequest()->getParam('qty')) : null;
-        $productId = $this->getRequest()->getParam('id') ? explode(',',$this->getRequest()->getParam('id')) : null;
-        $configurableId = $this->getRequest()->getParam('parent_id') ? explode(',',$this->getRequest()->getParam('parent_id')) : null;
+        $sku = $this->getRequest()->getParam('sku') ? explode(',',(string) $this->getRequest()->getParam('sku')) : null;
+        $qty = $this->getRequest()->getParam('qty') ? explode(',',(string) $this->getRequest()->getParam('qty')) : null;
+        $productId = $this->getRequest()->getParam('id') ? explode(',',(string) $this->getRequest()->getParam('id')) : null;
+        $configurableId = $this->getRequest()->getParam('parent_id') ? explode(',',(string) $this->getRequest()->getParam('parent_id')) : null;
         $backUrl = $this->getRequest()->getParam('back_url') ? $this->getRequest()->getParam('back_url') : null;
         $ga = $this->getRequest()->getParam('_ga');
         $cartUrl = $this->_cartHelper->getCartUrl();

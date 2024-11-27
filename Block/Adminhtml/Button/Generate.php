@@ -36,8 +36,6 @@ class Generate extends Field
             'onclick' => "setLocation('" . $url . "')",
         ];
 
-        $html = $buttonBlock->setData($data)->toHtml();
-
-        return $html;
+        return $buttonBlock->setData($data)->toHtml();
     }
 }

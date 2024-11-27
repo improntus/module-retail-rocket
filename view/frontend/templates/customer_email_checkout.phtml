@@ -2,6 +2,7 @@
 /** @var Improntus\RetailRocket\Block\Tracker $block */
 /** @var Magento\Sales\Model\Order $order */
 /** @var Magento\Framework\Escaper $escaper */
+/** @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer */
 
 $order = $block->getOrder();
 
@@ -10,10 +11,28 @@ if (!$order) {
     return;
 }
 $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
+
+$email = $escaper->escapeHtml($order->getCustomerEmail());
+$customerFirstName = $escaper->escapeHtml($order->getCustomerFirstname());
+$customerGenderHtml = '';
+$customerAgeHtml = '';
+$customerBirthdayHtml = '';
+
+if($order->getCustomerGender()) {
+    $customerGender = $escaper->escapeHtml($block->getCustomerGender($order->getCustomerGender()));
+    $customerGenderHtml = "userAdditional.gender = '$customerGender'";
+}
+
+if($order->getCustomerDob()){
+    $customerBirthdayHtml = "userAdditional.birthday = '{$escaper->escapeHtml($block->getCustomerBirthdate($order->getCustomerDob()))}'";
+    $customerAgeHtml = "userAdditional.age = '{$escaper->escapeHtml($block->getCustomerAge($order->getCustomerDob()))}'";
+}
 ?>
 
 <?php if($block->getAlwaysSubscribeCustomerEmail()): ?>
-    <script type="text/javascript">
+    <!-- Begin RetailRocket Email Subscription AlwaysSubscribeCustomerEmail Event -->
+    <?php
+    $scriptString = <<<script
         var emailSent = false;
 
         require([
@@ -22,19 +41,13 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
         {
             (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function()
             {
-                var email = "<?= $escaper->escapeHtml($order->getCustomerEmail()) ?>";
+                var email = "$email";
                 var userAdditional = {};
+                userAdditional.name = "$customerFirstName";
 
-                userAdditional.name = "<?= $escaper->escapeHtml($order->getCustomerFirstname()) ?>";
-
-                <?php if($order->getCustomerDob()): ?>
-                userAdditional.birthday = "<?= $escaper->escapeHtml($block->getCustomerBirthdate($order->getCustomerDob())) ?>";
-                userAdditional.age = "<?= $escaper->escapeHtml($block->getCustomerAge($order->getCustomerDob())) ?>";
-                <?php endif; ?>
-
-                <?php if($order->getCustomerGender()): ?>
-                userAdditional.gender = "<?= $escaper->escapeHtml($block->getCustomerGender($order->getCustomerGender())) ?>";
-                <?php endif; ?>
+                $customerBirthdayHtml
+                $customerAgeHtml
+                $customerGenderHtml
 
                 try {
                     if(!emailSent)
@@ -45,7 +58,12 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
                 } catch(e) {console.log(e)}
             })
         })
-    </script>
+
+    script;
+    ?>
+
+    <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false) ?>
+    <!-- End RetailRocket Email Subscription AlwaysSubscribeCustomerEmail Event -->
 <?php else: ?>
     <div class="rr-email-confirmation" style="margin-top: 20px;text-align: left;overflow: hidden;padding: 20px 0">
         <input type="checkbox" id="rr_email" name="rr_email" value="1">
@@ -53,7 +71,9 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
         <p style="font-size: 12px;padding-left: 20px;"><?= /** @noEscape */ __('I have read and accept the <a href="%1">Privacy Policies</a>',$privacyPoliciesLink)?></p>
     </div>
 
-    <script type="text/javascript">
+    <!-- Begin RetailRocket Email Subscription Event -->
+    <?php
+    $scriptString = <<<script
         var emailSent = false;
 
         require([
@@ -66,19 +86,14 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
                 {
                     (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function()
                     {
-                        var email = "<?= $escaper->escapeHtml($order->getCustomerEmail()) ?>";
+                        var email = "$email";
                         var userAdditional = {};
 
-                        userAdditional.name = "<?= $escaper->escapeHtml($order->getCustomerFirstname()) ?>";
+                        userAdditional.name = "$customerFirstName";
 
-                        <?php if($order->getCustomerDob()): ?>
-                        userAdditional.birthday = "<?= $escaper->escapeHtml($block->getCustomerBirthdate($order->getCustomerDob())) ?>";
-                        userAdditional.age = "<?= $escaper->escapeHtml($block->getCustomerAge($order->getCustomerDob())) ?>";
-                        <?php endif; ?>
-
-                        <?php if($order->getCustomerGender()): ?>
-                        userAdditional.gender = "<?= $escaper->escapeHtml($block->getCustomerGender($order->getCustomerGender())) ?>";
-                        <?php endif; ?>
+                        $customerBirthdayHtml
+                        $customerAgeHtml
+                        $customerGenderHtml
 
                         try {
                             if(!emailSent)
@@ -91,7 +106,12 @@ $privacyPoliciesLink = $block->getPrivacyPoliciesUrl();
                 }
             })
         })
-    </script>
+
+    script;
+    ?>
+
+    <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false) ?>
+    <!-- End RetailRocket Email Subscription Event -->
 <?php endif; ?>
 
 

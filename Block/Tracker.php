@@ -112,7 +112,7 @@ class Tracker extends Template
      */
     public function getCustomerBirthdate($dob)
     {
-        return date('d.m.Y',strtotime($dob));
+        return date('d.m.Y',strtotime((string) $dob));
     }
 
     /**
@@ -121,14 +121,12 @@ class Tracker extends Template
      */
     public function getCustomerAge($birthDate)
     {
-        $birthDate = date('d.m.Y',strtotime($birthDate));
+        $birthDate = date('d.m.Y',strtotime((string) $birthDate));
         $birthDate = explode(".", $birthDate);
 
-        $age = (date("md", date("U", mktime(0, 0, 0, $birthDate[1], $birthDate[0], $birthDate[2]))) > date("md")
+        return date("md", date("U", mktime(0, 0, 0, $birthDate[1], $birthDate[0], $birthDate[2]))) > date("md")
             ? ((date("Y") - $birthDate[2]) - 1)
-            : (date("Y") - $birthDate[2]));
-
-        return $age;
+            : (date("Y") - $birthDate[2]);
     }
 
     /**

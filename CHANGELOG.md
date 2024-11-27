@@ -1,6 +1,10 @@
 CHANGELOG
 ---------
 
+### 1.0.18
+- Added compatibility with Adobe Commerce / Magento Open Source with security patches about secure render scripts
+- Minor code improvements
+
 ### 1.0.17 
 - Fixed the final price in order success page. Now the price sent includes taxes
 - Replaced $block->escape by $escaper in templates

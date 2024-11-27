@@ -2,6 +2,8 @@
 
 /** @var Magento\Sales\Model\Order $order */
 /** @var Improntus\RetailRocket\Block\Tracker $block */
+/** @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer */
+
 $order = $block->getOrder();
 
 //Failsafe for bad order id
@@ -34,16 +36,25 @@ foreach ($order->getAllItems() as $item)
 ?>
 
 <?php if($order->getStatus() != 'canceled'): ?>
+    <?php
+    $orderIncrementId = $order->getIncrementId();
+    $orderItemsJson = json_encode($orderItems);
+    ?>
+
     <!-- Begin RetailRocket Transaction Event -->
-    <script type="text/javascript">
+    <?php
+    $scriptString = <<<script
         (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
             try {
                 rrApi.order({
-                    "transaction": "<?= /* @noEscape */ $order->getIncrementId()?>",
-                    "items": <?= /* @noEscape */ json_encode($orderItems) ?>
+                    "transaction": "$orderIncrementId",
+                    "items": $orderItemsJson
             });
             } catch(e) {console.log(e)}
         })
-    </script>
+        script;
+    ?>
+
+    <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false) ?>
     <!-- End RetailRocket Transaction Event -->
 <?php endif ?>

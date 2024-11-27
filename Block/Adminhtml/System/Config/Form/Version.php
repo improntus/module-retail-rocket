@@ -55,7 +55,7 @@ class Version extends \Magento\Config\Block\System\Config\Form\Field
     {
         $moduleVersion = $this->getVersion();
 
-        $html = '<tr>
+        return '<tr>
             <td class="label" colspan="4" style="text-align: left;">
                 <div style="padding:10px;background-color:#f8f8f8;border:1px solid #ddd;margin-bottom:7px;">
                     <a href="https://retailrocket.net/">RetailRocket</a> integration. <strong>Version</strong>:
@@ -65,8 +65,6 @@ class Version extends \Magento\Config\Block\System\Config\Form\Field
                 </div>
                 </td>
             </tr>';
-
-        return $html;
     }
 
     /**

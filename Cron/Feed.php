@@ -760,7 +760,7 @@ class Feed
             ? $this->_storeManager->getStore()->getData('code')
             : '';
 
-        return strlen($storeCode)
+        return strlen((string) $storeCode)
             ? $url . '?___store=' . $storeCode
             : $url;
     }
@@ -775,22 +775,19 @@ class Feed
         $simpleProducts = $product->getTypeInstance()->getUsedProducts($product);
 
         /** FIX: in some cases $simpleProducts is not returning all its child products (@version 1.0.8) */
-        if (isset($notVisibleProductsParents[$product->getId()])) {
-            if (count($simpleProducts) != count($notVisibleProductsParents[$product->getId()])) {
-                $simpleIdsFromObject = [];
-                foreach ($simpleProducts as $simpleProduct) {
-                    $simpleIdsFromObject[] = $simpleProduct->getId();
-                }
-
-                $diff = array_diff($notVisibleProductsParents[$product->getId()], $simpleIdsFromObject);
-                if (count($diff)) {
-                    foreach ($diff as $_productId) {
-                        try {
-                            $productToAdd = $this->_productRepository->getById($_productId);
-                            $simpleProducts[] = $productToAdd;
-                        } catch (Exception $e) {
-                            $this->logger->error($e->getMessage());
-                        }
+        if (isset($notVisibleProductsParents[$product->getId()]) && count($simpleProducts) != count($notVisibleProductsParents[$product->getId()])) {
+            $simpleIdsFromObject = [];
+            foreach ($simpleProducts as $simpleProduct) {
+                $simpleIdsFromObject[] = $simpleProduct->getId();
+            }
+            $diff = array_diff($notVisibleProductsParents[$product->getId()], $simpleIdsFromObject);
+            if (count($diff)) {
+                foreach ($diff as $_productId) {
+                    try {
+                        $productToAdd = $this->_productRepository->getById($_productId);
+                        $simpleProducts[] = $productToAdd;
+                    } catch (Exception $e) {
+                        $this->logger->error($e->getMessage());
                     }
                 }
             }
@@ -1391,15 +1388,15 @@ class Feed
         $header  = '<?xml version="1.0" encoding="UTF-8"?>';
         $header .= "\n";
         $header .= "<yml_catalog date=\"$now\">";
-        $header .= "\n<shop>";
 
-        return $header;
+        return $header . "\n<shop>";
     }
 
     /**
+     * @param bool $stockIdMode
      * @return string
      */
-    public function buildCategories($stockIdMode = false)
+    public function buildCategories(bool $stockIdMode = false): string
     {
         $categories = "<categories>\n";
 
@@ -1431,15 +1428,13 @@ class Feed
             }
         }
 
-        $categories .= "</categories>";
-
-        return $categories;
+        return $categories . "</categories>";
     }
 
     /**
      * @return string
      */
-    public function buildProducts()
+    public function buildProducts(): string
     {
         $products = "<offers>\n";
 
@@ -1488,7 +1483,7 @@ class Feed
                 }
             }
 
-            $product['description'] = $product['description'] ? strip_tags($product['description']) : $product['description'];
+            $product['description'] = $product['description'] ? strip_tags((string) $product['description']) : $product['description'];
 
             /** Prueba temporal para verificar que no se rompa el xml con las descripciones largas que traen html filtrado */
             $product['description'] = $product['description'] ? preg_replace('~[\r\n\t]+~', '', $product['description']) : $product['description'];
@@ -1498,8 +1493,8 @@ class Feed
                 $product['name'] = $this->_retailRocketHelper->cleanString($product['name']);
             }
 
-            if (!is_null($product['description']) && strlen($product['description']) >= 200) {
-                $product['description'] = substr($product['description'], 0, 190);
+            if (!is_null($product['description']) && strlen((string) $product['description']) >= 200) {
+                $product['description'] = substr((string) $product['description'], 0, 190);
                 $product['description'] = $this->_retailRocketHelper->replaceXmlEntities($product['description']);
 
                 //1.0.10 max length added
@@ -1509,9 +1504,9 @@ class Feed
                 }
 
                 //1.0.9
-                $product['description'] = !is_null($product['description'])
-                    ? substr_replace($product['description'], '...', -3, 3)
-                    : $product['description'];
+                $product['description'] = is_null($product['description'])
+                    ? $product['description']
+                    : substr_replace($product['description'], '...', -3, 3);
             }
 
             $product['description'] = $this->_retailRocketHelper->replaceXmlEntities($product['description']);
@@ -1568,13 +1563,13 @@ class Feed
                         $website['description'] = $this->_retailRocketHelper->cleanString($website['description']);
                     }
 
-                    if (!is_null($website['description']) && strlen($website['description']) >= 200) {
-                        $productDescription = substr($product['description'], 0, 190);
+                    if (!is_null($website['description']) && strlen((string) $website['description']) >= 200) {
+                        $productDescription = substr((string) $product['description'], 0, 190);
                         $website['description'] = $this->_retailRocketHelper->replaceXmlEntities($productDescription);
                     }
 
                     if ($this->_retailRocketHelper->hasHtml($website['description'])) {
-                        $website['description'] = $website['description'] ? strip_tags($website['description']) : $website['description'];
+                        $website['description'] = $website['description'] ? strip_tags((string) $website['description']) : $website['description'];
 
                         $products .= "<description><![CDATA[{$website['description']}]]></description>";
                     } else {
@@ -1612,16 +1607,13 @@ class Feed
             $products .= "</offer>\n";
         }
 
-        $products .= "</offers>";
-
-        return $products;
+        return $products . "</offers>";
     }
 
     public function buildFooter()
     {
         $footer = "</shop>\n";
-        $footer .= "</yml_catalog>";
 
-        return $footer;
+        return $footer . "</yml_catalog>";
     }
 }

@@ -1,15 +1,17 @@
 <?php
 /** @var \Improntus\RetailRocket\Block\Tracker $block */
 /** @var Magento\Framework\Escaper $escaper */
+/** @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer */
 ?>
 
 <!-- BEGIN RETAIL ROCKET INTEGRATION -->
-<script type="text/javascript">
-    var rrPartnerId = "<?= $escaper->escapeHtml($block->getPartnerId())?>";
-    var rrApi = {};
+<?php
+$partnerId = $escaper->escapeHtml($block->getPartnerId());
+
+$scriptString = <<<script
+    var rrPartnerId = "$partnerId";
+    var rrApi = rrApi || {};
     var rrApiOnReady = rrApiOnReady || [];
-    rrApi.addToBasket = rrApi.order = rrApi.categoryView = rrApi.view =
-        rrApi.recomMouseDown = rrApi.recomAddToCart = function() {};
     (function(d) {
         var ref = d.getElementsByTagName('script')[0];
         var apiJs, apiJsId = 'rrApi-jssdk';
@@ -17,10 +19,11 @@
         apiJs = d.createElement('script');
         apiJs.id = apiJsId;
         apiJs.async = true;
-        // apiJs.src = "//cdn.retailrocket.net/content/javascript/tracking.js";
-        //permanent change?
-        apiJs.src = "//mcdn.retailrocket.net/content/javascript/trackingm.js";
+        apiJs.src = "//cdn.retailrocket.net/content/javascript/tracking.js";
         ref.parentNode.insertBefore(apiJs, ref);
     }(document));
-</script>
+script;
+?>
+
+<?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false) ?>
 <!-- END RETAIL ROCKET INTEGRATION -->

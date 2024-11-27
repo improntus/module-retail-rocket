@@ -5,6 +5,7 @@ use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Cron\Model\ResourceModel\Schedule\CollectionFactory;
+use Magento\Cron\Model\Schedule;
 
 /**
  * Class Links
@@ -19,7 +20,7 @@ class CronExecution extends Field
     /**
      * @var CollectionFactory
      */
-    protected $_schedule;
+    protected CollectionFactory $_schedule;
 
     /**
      * CronExecution constructor.
@@ -39,7 +40,7 @@ class CronExecution extends Field
      * @param AbstractElement $element
      * @return string
      */
-    public function _getElementHtml(AbstractElement $element)
+    public function _getElementHtml(AbstractElement $element): string
     {
         $element = null;
 
@@ -64,26 +65,14 @@ class CronExecution extends Field
 
         foreach ($cronSchedule as $_schedules)
         {
-            switch ($_schedules->getStatus()){
-                case \Magento\Cron\Model\Schedule::STATUS_SUCCESS:
-                    $statusColor = "style='color:#008000'";
-                    break;
-                case \Magento\Cron\Model\Schedule::STATUS_RUNNING:
-                    $statusColor = "style='color:#ff9008'";
-                    break;
-                case \Magento\Cron\Model\Schedule::STATUS_ERROR:
-                    $statusColor = "style='color:#ff0000'";
-                    break;
-                case \Magento\Cron\Model\Schedule::STATUS_MISSED:
-                    $statusColor = "style='color:#3f00ff'";
-                    break;
-                case \Magento\Cron\Model\Schedule::STATUS_PENDING:
-                    $statusColor = "style='color:#000000'";
-                    break;
-
-                default:
-                    $statusColor = '';
-            }
+            $statusColor = match ($_schedules->getStatus()) {
+                Schedule::STATUS_SUCCESS => "style='color:#008000'",
+                Schedule::STATUS_RUNNING => "style='color:#ff9008'",
+                Schedule::STATUS_ERROR => "style='color:#ff0000'",
+                Schedule::STATUS_MISSED => "style='color:#3f00ff'",
+                Schedule::STATUS_PENDING => "style='color:#000000'",
+                default => '',
+            };
 
             $html .= "<tr>";
             $html .= "<td $statusColor>{$_schedules->getStatus()}</td>";
@@ -96,8 +85,7 @@ class CronExecution extends Field
         }
 
         $html .= '</tbody></table>';
-        $html .= '</div>';
 
-        return $html;
+        return $html . '</div>';
     }
 }

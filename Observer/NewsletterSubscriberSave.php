@@ -117,7 +117,7 @@ class NewsletterSubscriberSave implements ObserverInterface
 
         if($customer->getDob())
         {
-            $result['additional']['birthday'] = date('d.m.Y',strtotime($customer->getDob()));
+            $result['additional']['birthday'] = date('d.m.Y',strtotime((string) $customer->getDob()));
 
             $age = $this->getAge($result['additional']['birthday']);
 
@@ -144,12 +144,10 @@ class NewsletterSubscriberSave implements ObserverInterface
      */
     public function getAge($birthDate)
     {
-        $birthDate = explode(".", $birthDate);
+        $birthDate = explode(".", (string) $birthDate);
 
-        $age = (date("md", date("U", mktime(0, 0, 0, $birthDate[1], $birthDate[0], $birthDate[2]))) > date("md")
+        return date("md", date("U", mktime(0, 0, 0, $birthDate[1], $birthDate[0], $birthDate[2]))) > date("md")
             ? ((date("Y") - $birthDate[2]) - 1)
-            : (date("Y") - $birthDate[2]));
-
-        return $age;
+            : (date("Y") - $birthDate[2]);
     }
 }

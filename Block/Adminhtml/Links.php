@@ -52,8 +52,6 @@ class Links extends Field
             $html .= "<a href='{$_link['link']}' download='{$_link['file']}' target='_blank'>{$_link['link']}</a></p>";
         }
 
-        $html .= '</div>';
-
-        return $html;
+        return $html . '</div>';
     }
 }

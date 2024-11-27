@@ -21,7 +21,7 @@ class ImageType implements OptionSourceInterface
      */
     public function toOptionArray()
     {
-        $attributeData = [
+        return [
             [
                 'value' => 'category_page_grid',
                 'label' => __('Category page grid')
@@ -31,7 +31,5 @@ class ImageType implements OptionSourceInterface
                 'label' => __('Category page list')
             ]
         ];
-
-        return $attributeData;
     }
 }

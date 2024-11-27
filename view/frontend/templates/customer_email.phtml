@@ -1,18 +1,31 @@
-<?php /** @var Improntus\RetailRocket\Block\Tracker $block */ ?>
+<?php
+/** @var Improntus\RetailRocket\Block\Tracker $block */
+/** @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer */
+?>
 <?php $customerLogged = $block->getCustomerLogged() ?>
 
 <?php if(is_array($customerLogged) && isset($customerLogged['user_data']['email'])): ?>
-    <script type="text/javascript">
+
+    <!-- Begin RetailRocket Customer Email Event -->
+    <?php
+    $customerEmail = $customerLogged['user_data']['email'];
+    $customerAdditional = json_encode($customerLogged['user_data']['additional']);
+
+    $scriptString = <<<script
         (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
 
-            var email = "<?= /* @noEscape */ $customerLogged['user_data']['email'] ?>";
-            var userAdditional = <?= /* @noEscape */ json_encode($customerLogged['user_data']['additional'])?>;
+            var email = "$customerEmail";
+            var userAdditional = $customerAdditional;
 
             try {
                 rrApi.setEmail(email, userAdditional);
             } catch(e) {console.log(e)}
         })
-    </script>
+        script;
+    ?>
+
+    <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false) ?>
+    <!-- End RetailRocket Customer Email Event -->
 <?php endif ?>
 
 

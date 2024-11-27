@@ -1,11 +1,28 @@
-<?php /** @var Improntus\RetailRocket\Block\Tracker $block */ ?>
+<?php
+/** @var Improntus\RetailRocket\Block\Tracker $block */
+/** @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer */
+?>
 <?php $addToCart = $block->getAddToCart() ?>
 <?php $stockId = $block->getStockId() ?>
 
 <?php if($addToCart): ?>
-    <script type="text/javascript">
+
+    <?php
+    $stockIdHtml = "";
+
+    if($stockId){
+        $stockIdHtml = ", {'stockId': '$stockId'}";
+    }
+    ?>
+    <!-- Begin RetailRocket AddToCart Event -->
+    <?php
+    $scriptString = <<<script
         (window["rrApiOnReady"] = window["rrApiOnReady"] || []).push(function() {
-            try { rrApi.addToBasket(<?= /* @noEscape */ $addToCart ?><?php if($stockId):?>, {'stockId': '<?= /* @noEscape */ $stockId ?>'}<?php endif; ?>) } catch(e) {console.log(e)}
+            try { rrApi.addToBasket($addToCart $stockIdHtml) } catch(e) {console.log(e)}
         })
-    </script>
+        script;
+    ?>
+
+    <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false) ?>
+    <!-- End RetailRocket AddToCart Event -->
 <?php endif ?>
