@@ -1,6 +1,9 @@
 CHANGELOG
 ---------
 
+### 1.0.19
+- Updated compatibility with multi source inventory management (MSI)
+ 
 ### 1.0.18
 - Added compatibility with Adobe Commerce / Magento Open Source with security patches about secure render scripts
 - Minor code improvements

@@ -1,8 +1,8 @@
 <?php
 /**
- * @Version 1.0.18
- * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Solution Partner
- * @copyright Copyright (c) 2024 Improntus
+ * @Version 1.0.19
+ * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Gold Solution Partner
+ * @copyright Copyright (c) 2025 Improntus
  */
 \Magento\Framework\Component\ComponentRegistrar::register(
     \Magento\Framework\Component\ComponentRegistrar::MODULE,

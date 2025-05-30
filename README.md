@@ -1,5 +1,5 @@
 # Retail Rocket Integration 
-##### Version 1.0.18
+##### Version 1.0.19
 
 ## Instalation Steps
 
@@ -23,10 +23,9 @@
 
 ## User manual
 
-#### [Wiki English](doc:https://github.com/improntus/module-retail-rocket/wiki/User-Manual-English)
-#### [Wiki Español](doc:https://github.com/improntus/module-retail-rocket/wiki/Manual-de-uso---Espa%C3%B1ol)
+#### [Wiki English](https://github.com/improntus/module-retail-rocket/wiki/User-Manual-English)
+#### [Wiki Español](https://github.com/improntus/module-retail-rocket/wiki/Manual-de-uso---Espa%C3%B1ol)
 
 ## Author
 
-[Improntus](doc:https://www.improntus.com) - Elevating Digital Experience | Adobe Solution Partner
-
+[Improntus](https://www.improntus.com) - Elevating Digital Experience | [Adobe Gold Solution Partner](https://solutionpartners.adobe.com/s/directory/detail/improntus#expertise)

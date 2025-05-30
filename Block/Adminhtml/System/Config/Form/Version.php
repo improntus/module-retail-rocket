@@ -7,9 +7,9 @@ use Magento\Framework\Module\ModuleListInterface;
 /**
  * Class Version
  *
- * @Version 1.0.18
- * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Solution Partner
- * @copyright Copyright (c) 2024 Improntus
+ * @Version 1.0.19
+ * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Gold Solution Partner
+ * @copyright Copyright (c) 2025 Improntus
  * @package Improntus\RetailRocket\Block\Adminhtml\System\Config\Form
  */
 class Version extends \Magento\Config\Block\System\Config\Form\Field
@@ -62,6 +62,10 @@ class Version extends \Magento\Config\Block\System\Config\Form\Field
                     <a href="https://github.com/improntus/module-retail-rocket/releases">' . $moduleVersion . '</a>
                     <br>
                     <a href="https://github.com/improntus/module-retail-rocket/wiki">'. __('User Manual / Wiki') . '</a>
+                    <br>
+                    <br>
+
+                    <strong>Developed by</strong> <a href="https://improntus.com/">Improntus</a> - <a href="https://partners.adobe.com/s/directory/solution/improntus#expertise">Adobe Gold Solution Partner</a>
                 </div>
                 </td>
             </tr>';

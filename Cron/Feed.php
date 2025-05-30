@@ -10,7 +10,6 @@ use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ProductFactory;
-use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as ConfigurableProduct;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection as AttributeCollection;
@@ -27,13 +26,15 @@ use Magento\GroupedProduct\Model\Product\Type\Grouped;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Swatches\Helper\Data as SwatchesHelperData;
 use Psr\Log\LoggerInterface;
+use Magento\InventorySales\Model\GetProductSalableQty;
+use Magento\InventorySales\Model\StockByWebsiteIdResolver;
 
 /**
  * Class Feed
  *
- * @Version 1.0.18
- * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Solution Partner
- * @copyright Copyright (c) 2024 Improntus
+ * @Version 1.0.19
+ * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Gold Solution Partner
+ * @copyright Copyright (c) 2025 Improntus
  * @package Improntus\RetailRocket\Cron
  */
 class Feed
@@ -121,11 +122,6 @@ class Feed
     protected $_attributeCollection;
 
     /**
-     * @var StockRegistryInterface
-     */
-    protected $_stockRegistry;
-
-    /**
      * @var ConfigurableProduct
      */
     protected $_configurable;
@@ -141,6 +137,16 @@ class Feed
     protected $_helperSwatches;
 
     /**
+     * @var GetProductSalableQty
+     */
+    protected $getProductSalableQty;
+
+    /**
+     * @var StockByWebsiteIdResolver
+     */
+    protected $stockByWebsiteIdResolver;
+
+    /**
      * Feed constructor.
      *
      * @param Data $helper
@@ -152,7 +158,6 @@ class Feed
      * @param TimezoneInterface $timezone
      * @param File $driverFile
      * @param AttributeCollection $attributeCollection
-     * @param StockRegistryInterface $stockRegistry
      * @param ConfigurableProduct $configurable
      * @param ProductRepositoryInterface $productRepository
      * @param SwatchesHelperData $helperSwatches
@@ -167,10 +172,11 @@ class Feed
         TimezoneInterface $timezone,
         File $driverFile,
         AttributeCollection $attributeCollection,
-        StockRegistryInterface $stockRegistry,
         ConfigurableProduct $configurable,
         ProductRepositoryInterface $productRepository,
-        SwatchesHelperData $helperSwatches
+        SwatchesHelperData $helperSwatches,
+        GetProductSalableQty $getProductSalableQty,
+        StockByWebsiteIdResolver $stockByWebsiteIdResolver
     ) {
         $this->_retailRocketHelper = $helper;
         $this->logger = $logger;
@@ -184,10 +190,11 @@ class Feed
         $modelAttribute = $helper->getModelAttribute();
         $vendorAttribute = $helper->getVendorAttribute();
         $this->_attributeCollection = $attributeCollection;
-        $this->_stockRegistry = $stockRegistry;
         $this->_configurable = $configurable;
         $this->_productRepository = $productRepository;
         $this->_helperSwatches = $helperSwatches;
+        $this->getProductSalableQty = $getProductSalableQty;
+        $this->stockByWebsiteIdResolver = $stockByWebsiteIdResolver;
 
         $extraAttributes = $helper->getExtraAttributes();
 
@@ -254,7 +261,7 @@ class Feed
         foreach ($stores as $_store) {
             if ($_store->getConfig('retailrocket/configuration/enable_single_feed')) {
                 $this->_categories = $this->getCategoryTree($_store->getRootCategoryId(), $_store->getId());
-                $this->_products = $this->getProducts(null, $_store->getId(), true);
+                $this->_products = $this->getProducts($_store->getWebsiteId(), $_store->getId(), true);
 
                 $this->saveToFile($_store->getId());
             }
@@ -409,9 +416,11 @@ class Feed
     {
         $result = [];
 
-        $collection = $this->getProductCollection($storeId, $allAttributes, $storeId);
+        $collection = $this->getProductCollection($websiteId, $allAttributes, $storeId);
         $i = 0;
         $notVisibleProductsParents = [];
+
+        $stockIdByWebsite = $this->stockByWebsiteIdResolver->execute($websiteId)->getStockId();
 
         foreach ($collection as $product) {
             if ($product->getVisibility() == Visibility::VISIBILITY_NOT_VISIBLE) {
@@ -470,7 +479,7 @@ class Feed
                         'picture' => $this->_retailRocketHelper->getProductImageUrl($childProduct),
                         'name' => $this->_retailRocketHelper->replaceXmlEntities($childProduct->getName()),
                         'description' => $childProduct->getData($this->_descriptionAttribute),
-                        'available' => $childProduct->getIsSalable(),
+                        'available' => $this->getAvailableStatus($childProduct,$stockIdByWebsite),
                         'categories' => $lastCategoryId,
                         'group_id' => $groupId,
                         'params' => $params,
@@ -591,7 +600,7 @@ class Feed
 //                    $lastCategoryId = (is_array($categoryIds) && count($categoryIds)) ? end($categoryIds) : null;
 
                     if ($simpleProduct->getTypeId() == Type::TYPE_SIMPLE) {
-                        $productAvailable = $this->getAvailableStatus($simpleProduct);
+                        $productAvailable = $this->getAvailableStatus($simpleProduct,$stockIdByWebsite);
                     } else {
                         $productAvailable = $simpleProduct->getIsSalable();
                     }
@@ -643,6 +652,12 @@ class Feed
                     $this->getAvailableCategoryIds($product->getCategoryIds())
                 );
 
+                if ($product->getTypeId() == Type::TYPE_BUNDLE) {
+                    $productAvailable = $product->getIsSalable();
+                } else {
+                    $productAvailable = $this->getAvailableStatus($product,$stockIdByWebsite);
+                }
+
                 $result[$i] = [
                     'id' => $product->getId(),
                     'url' => $this->formatUrl($product->getProductUrl()),
@@ -650,7 +665,7 @@ class Feed
                     'picture' => $productImage,
                     'name' => $product->getName(),
                     'description' => $product->getData($this->_descriptionAttribute),
-                    'available' => $this->getAvailableStatus($product),
+                    'available' => $productAvailable,
                     'categories' => $lastCategoryId,
                     'group_id' => $groupId,
                     'params' => $params,
@@ -801,15 +816,15 @@ class Feed
      * @param $product
      * @return bool
      */
-    protected function getAvailableStatus($product)
+    protected function getAvailableStatus($product,$stockId)
     {
         if ($product->getStatus() != Status::STATUS_ENABLED) {
             return false;
         }
 
-        $stockItem = $this->_stockRegistry->getStockItem($product->getId());
+        $salableQty = $this->getProductSalableQty->execute($product->getSku(),$stockId);
 
-        return (($stockItem->getQty() > 0) && $stockItem->getIsInStock());
+        return $salableQty > 0;
     }
 
     /**
@@ -929,7 +944,7 @@ class Feed
                             $result[$i]['stock'][$webisteCode]['description'] = $productByStockId->getData($this->_descriptionAttribute);
 
                             if ($productByStockId->getTypeId() == Type::TYPE_SIMPLE) {
-                                $productAvailable = $this->getAvailableStatus($productByStockId);
+                                $productAvailable = $this->getAvailableStatus($productByStockId,$stockIdByWebsite);
                             } else {
                                 $productAvailable = $productByStockId->getIsSalable();
                             }
@@ -979,7 +994,7 @@ class Feed
                         $result[$i]['stock'][$webisteCode]['description'] = $productByStockId->getData($this->_descriptionAttribute);
 
                         if ($productByStockId->getTypeId() == Type::TYPE_SIMPLE) {
-                            $productAvailable = $this->getAvailableStatus($productByStockId);
+                            $productAvailable = $this->getAvailableStatus($productByStockId,$stockIdByWebsite);
                         } else {
                             $productAvailable = $productByStockId->getIsSalable();
                         }
@@ -1292,7 +1307,7 @@ class Feed
                         $result[$i]['stock'][$storeCode]['description'] = $productByStockId->getResource()->getAttributeRawValue($productId, $this->_descriptionAttribute, $_storeId);
 
                         if ($productByStockId->getTypeId() == Type::TYPE_SIMPLE) {
-                            $productAvailable = $this->getAvailableStatus($productByStockId);
+                            $productAvailable = $this->getAvailableStatus($productByStockId,$stockIdByWebsite);
                         } else {
                             $productAvailable = $productByStockId->getIsSalable();
                         }

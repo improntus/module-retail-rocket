@@ -7,9 +7,9 @@ use Magento\Framework\Data\OptionSourceInterface;
 /**
  * Class ExtraAttributes
  *
- * @Version 1.0.18
- * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Solution Partner
- * @copyright Copyright (c) 2024 Improntus
+ * @Version 1.0.19
+ * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Gold Solution Partner
+ * @copyright Copyright (c) 2025 Improntus
  * @package Improntus\RetailRocket\Model\Config\Source
  */
 class ImageType implements OptionSourceInterface
