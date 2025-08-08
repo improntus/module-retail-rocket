@@ -1,6 +1,9 @@
 CHANGELOG
 ---------
-
+### 1.0.20
+- Added ![CDATA[...]] for description fields
+- Added "var rrDisabledCookies" in main script
+ 
 ### 1.0.19
 - Updated compatibility with multi source inventory management (MSI)
  

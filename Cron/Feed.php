@@ -1529,7 +1529,7 @@ class Feed
             if ($this->_retailRocketHelper->hasHtml($product['description'])) {
                 $products .= "<description><![CDATA[{$product['description']}]]></description>";
             } else {
-                $products .= "<description>{$product['description']}</description>";
+                $products .= "<description><![CDATA[{$product['description']}]]</description>";
             }
 
             if ($product['model']) {
@@ -1588,7 +1588,7 @@ class Feed
 
                         $products .= "<description><![CDATA[{$website['description']}]]></description>";
                     } else {
-                        $products .= "<description>{$website['description']}</description>";
+                        $products .= "<description><![CDATA[{$website['description']}]]</description>";
                     }
 
                     if (isset($website['params']) && count($website['params'])) {
