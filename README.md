@@ -1,5 +1,5 @@
 # Retail Rocket Integration 
-##### Version 1.0.19
+##### Version 1.0.20
 
 ## Instalation Steps
 

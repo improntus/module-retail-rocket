@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <!--
 /**
- * @Version 1.0.19
+ * @Version 1.0.20
  * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Gold Solution Partner
  * @copyright Copyright (c) 2025 Improntus
  * @package Improntus_RetailRocket
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
-    <module name="Improntus_RetailRocket" setup_version="1.0.19">
+    <module name="Improntus_RetailRocket" setup_version="1.0.20">
         <sequence>
             <module name="Magento_Checkout"/>
             <module name="Magento_Catalog"/>

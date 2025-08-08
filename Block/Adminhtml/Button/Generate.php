@@ -9,7 +9,7 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
 /**
  * Class Generate
  *
- * @Version 1.0.19
+ * @Version 1.0.20
  * @author Improntus <https://www.improntus.com> - Elevating Digital Experience | Adobe Gold Solution Partner
  * @copyright Copyright (c) 2025 Improntus
  * @package Improntus\RetailRocket\Block\Adminhtml\Button
