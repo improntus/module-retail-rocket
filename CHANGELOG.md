@@ -1,5 +1,8 @@
 CHANGELOG
 ---------
+### 1.0.21
+- Added search result script
+
 ### 1.0.20
 - Added ![CDATA[...]] for description fields
 - Added "var rrDisabledCookies" in main script

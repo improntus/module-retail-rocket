@@ -1,0 +1,23 @@
+<?php
+/** @var \Improntus\RetailRocket\Block\Tracker $block */
+/** @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer */
+?>
+
+<!-- BEGIN RETAIL ROCKET SEARCH SCRIPT -->
+<?php
+$searchQuery = $block->getSearchUrlParams();
+
+$scriptString = <<<script
+ rrApiOnReady.push(
+    function() {
+        try {
+            rrApi.search('$searchQuery');
+        }
+        catch(e) {}
+     }
+);
+script;
+?>
+
+<?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false) ?>
+<!-- END RETAIL ROCKET SEARCH SCRIPT -->

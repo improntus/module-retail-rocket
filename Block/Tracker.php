@@ -153,4 +153,12 @@ class Tracker extends Template
     {
         return $this->_helper->getAlwaysSubscribeCustomerEmail();
     }
+
+    /**
+     * @return mixed
+     */
+    public function getSearchUrlParams()
+    {
+        return $this->getRequest()->getParam('q');
+    }
 }
